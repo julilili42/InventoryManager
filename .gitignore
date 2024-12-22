@@ -1,0 +1,16 @@
+# Globale Ignorierregeln
+
+# Logs
+*.log
+*.tmp
+
+# Node.js (frontend)
+frontend/node_modules/
+
+# Rust (backend)
+backend/target/
+
+# Sonstiges
+.DS_Store
+*.env
+
