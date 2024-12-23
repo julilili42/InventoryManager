@@ -31,7 +31,7 @@ import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { deleteEntries } from "@/articles/cardForm/operations";
+import { deleteEntries } from "@/lib/operations";
 import { useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
 

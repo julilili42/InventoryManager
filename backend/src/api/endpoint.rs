@@ -2,7 +2,7 @@
 use axum::{
     extract::{Extension, Json, Multipart, Path},
     http::StatusCode,
-    response::Json as AxumJson,
+    response::{Response, Json as AxumJson},
 };
 
 use csv::ReaderBuilder;
@@ -15,9 +15,22 @@ use crate::core::operations::{
 use crate::core::types::{Article, DbPool};
 use serde_json::json;
 
+use crate::api::pdf::generate_pdf;
+
 // IDEE
 // import_csv Funktion parse_csv extrahieren und in operations.rs verschieben
 // import csv Feld namen anpassen auf deutsch (Artikelnummer, Preis, Hersteller, Bestand)
+
+
+// POST /pdf_gen
+pub async fn pdf_gen(
+    Json(article): Json<Article>,
+) -> Result<Response, (StatusCode, AxumJson<serde_json::Value>)> { 
+    let pdf_response = generate_pdf(Json(article)).await;
+    Ok(pdf_response)
+}
+
+
 
 // GET /data
 pub async fn get_data(

@@ -1,6 +1,6 @@
 // operation.ts
 import { del, post } from "@/lib/api";
-import { Article } from "../../lib/interfaces";
+import { Article } from "./interfaces";
 import axios from "axios";
 
 export const addEntry = async (article: Article): Promise<void> => {
@@ -57,4 +57,42 @@ export const deleteEntries = async (articleIds: number[]): Promise<void> => {
       throw error;
     }
   });
+};
+
+export const pdf_gen = async (article: Article): Promise<void> => {
+  try {
+    const response = await post({
+      route: "/pdf_gen",
+      body: {
+        article_id: article.article_id,
+        price: article.price,
+        manufacturer: article.manufacturer,
+        stock: article.stock,
+        ...(article.category && { category: article.category }),
+      },
+      responseType: "blob",
+    });
+
+    const blob =
+      response instanceof Blob
+        ? response
+        : new Blob([response], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `article_${article.article_id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error(
+        "Fehler beim Generieren des PDF:",
+        error.response.data.error
+      );
+    }
+    throw error;
+  }
 };

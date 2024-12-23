@@ -27,7 +27,7 @@ pub fn get_connection(
 pub fn update_article(conn: &rusqlite::Connection, article: Article) -> rusqlite::Result<()> {
     conn.execute(
         "UPDATE article 
-        SET price = ?2, manufacturer = ?3, stock = ?4, category = ?5, description = ?6, image = ?7
+        SET price = ?2, manufacturer = ?3, stock = ?4, category = ?5
         WHERE article_id = ?1",
         params![
             article.article_id,
@@ -35,8 +35,6 @@ pub fn update_article(conn: &rusqlite::Connection, article: Article) -> rusqlite
             article.manufacturer,
             article.stock,
             article.category,
-            article.description,
-            article.image
         ],
     )?;
     Ok(())
@@ -44,7 +42,7 @@ pub fn update_article(conn: &rusqlite::Connection, article: Article) -> rusqlite
 
 pub fn search_article(conn: &rusqlite::Connection, article_id: i32) -> rusqlite::Result<Article> {
     let mut stmt = conn.prepare(
-        "SELECT article_id, price, manufacturer, stock, category, description, image 
+        "SELECT article_id, price, manufacturer, stock, category 
         FROM article WHERE article_id = ?1",
     )?;
     let article_iter = stmt.query_map(params![article_id], |row| {
@@ -54,8 +52,6 @@ pub fn search_article(conn: &rusqlite::Connection, article_id: i32) -> rusqlite:
             manufacturer: row.get(2)?,
             stock: row.get(3)?,
             category: row.get(4)?,
-            description: row.get(5)?,
-            image: row.get(6)?,
         })
     })?;
 
@@ -73,7 +69,7 @@ fn check_article_existence(conn: &rusqlite::Connection, article_id: i32) -> bool
 
 pub fn get_all_article(conn: &rusqlite::Connection) -> rusqlite::Result<Vec<Article>> {
     let mut stmt = conn.prepare(
-        "SELECT article_id, price, manufacturer, stock, category, description, image FROM article",
+        "SELECT article_id, price, manufacturer, stock, category FROM article",
     )?;
     let article_iter = stmt.query_map([], |row| {
         Ok(Article {
@@ -82,8 +78,6 @@ pub fn get_all_article(conn: &rusqlite::Connection) -> rusqlite::Result<Vec<Arti
             manufacturer: row.get(2)?,
             stock: row.get(3)?,
             category: row.get(4)?,
-            description: row.get(5)?,
-            image: row.get(6)?,
         })
     })?;
 
@@ -104,9 +98,7 @@ pub fn create_table(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
             price          REAL NOT NULL,
             manufacturer     TEXT NOT NULL,
             stock          INTEGER NOT NULL, 
-            category       TEXT,
-            description    TEXT,
-            image          TEXT
+            category       TEXT
         )",
         [],
     )?;
@@ -123,16 +115,14 @@ pub fn insert_article(conn: &rusqlite::Connection, article: Article) -> rusqlite
         )));
     }
     conn.execute(
-        "INSERT INTO article (article_id, price, manufacturer, stock, category, description, image) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        "INSERT INTO article (article_id, price, manufacturer, stock, category) 
+        VALUES (?1, ?2, ?3, ?4, ?5)",
         params![
             article.article_id,
             article.price,
             article.manufacturer,
             article.stock,
             article.category,
-            article.description,
-            article.image
         ],
     )?;
     Ok(())

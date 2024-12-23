@@ -42,6 +42,7 @@ const post = async (request: Request) => {
       request.body,
       {
         headers,
+        responseType: request.responseType || "json",
       }
     );
     return response.data;

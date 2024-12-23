@@ -1,7 +1,7 @@
 // page.tsx
 import { useEffect, useState } from "react";
 import { columns } from "./columns";
-import { DataTable } from "./articleTable";
+import { DataTable } from "./customerTable";
 import { useStore } from "@/lib/store";
 
 export function TableArticle() {

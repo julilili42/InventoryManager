@@ -2,7 +2,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Article } from "../lib/interfaces";
+import { Article } from "@/lib/interfaces";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export const columns: ColumnDef<Article>[] = [
@@ -27,7 +27,7 @@ export const columns: ColumnDef<Article>[] = [
             className="pl-0"
           >
             Article ID
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="w-4 h-4 ml-2" />
           </Button>
         </div>
       );

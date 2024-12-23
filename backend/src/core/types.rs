@@ -13,8 +13,6 @@ pub struct Article {
     pub manufacturer: String,
     pub stock: i32,
     pub category: Option<String>,
-    pub description: Option<String>,
-    pub image: Option<String>,
 }
 
 pub type DbPool = Arc<r2d2::Pool<SqliteConnectionManager>>;
