@@ -1,19 +1,16 @@
 // operations.rs
-use crate::core::types::Article;
-use rusqlite::params;
+use rusqlite::{params, Connection};
 
 use axum::{http::StatusCode, response::Json as AxumJson};
 
+use crate::core::traits::{Mappable, Insertable};
 use crate::core::types::DbPool;
 use serde_json::json;
 
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
 
-// Ideen
-// Article als Parameter übergeben --> Leichter Felder hinzufügen
-
-pub fn get_connection(
+pub fn establish_connection(
     pool: &DbPool,
 ) -> Result<PooledConnection<SqliteConnectionManager>, (StatusCode, AxumJson<serde_json::Value>)> {
     pool.get().map_err(|_| {
@@ -24,74 +21,95 @@ pub fn get_connection(
     })
 }
 
-pub fn update_article(conn: &rusqlite::Connection, article: Article) -> rusqlite::Result<()> {
-    conn.execute(
-        "UPDATE article 
-        SET price = ?2, manufacturer = ?3, stock = ?4, category = ?5
-        WHERE article_id = ?1",
-        params![
-            article.article_id,
-            article.price,
-            article.manufacturer,
-            article.stock,
-            article.category,
-        ],
-    )?;
+pub fn update_record<T: Insertable>(conn: &Connection, item: &T) -> rusqlite::Result<()> {
+    let table = T::table_name();
+    let columns = T::columns();
+    let id_column = T::id_column();
+    let set_clause = columns
+        .iter()
+        .enumerate()
+        .map(|(i, col)| format!("{} = ?{}", col, i + 2))
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    let query = format!(
+        "UPDATE {} SET {} WHERE {} = ?1",
+        table, set_clause, id_column
+    );
+
+    let mut params = vec![item.id_value().into()];
+    params.extend(item.values());
+
+    conn.execute(&query, rusqlite::params_from_iter(params))?;
     Ok(())
 }
 
-pub fn search_article(conn: &rusqlite::Connection, article_id: i32) -> rusqlite::Result<Article> {
-    let mut stmt = conn.prepare(
-        "SELECT article_id, price, manufacturer, stock, category 
-        FROM article WHERE article_id = ?1",
-    )?;
-    let article_iter = stmt.query_map(params![article_id], |row| {
-        Ok(Article {
-            article_id: row.get(0)?,
-            price: row.get(1)?,
-            manufacturer: row.get(2)?,
-            stock: row.get(3)?,
-            category: row.get(4)?,
-        })
-    })?;
+pub fn find_record_by_id<T: Mappable + Insertable>(
+    conn: &Connection,
+    id_value: i32,
+) -> rusqlite::Result<T> {
+    let table = T::table_name();
+    let id_column = T::id_column();
+    let query = format!("SELECT * FROM {} WHERE {} = ?1", table, id_column);
+    let mut stmt = conn.prepare(&query)?;
+    let mut iter = stmt.query_map([id_value], |row| T::from_row(row))?;
 
-    let article = article_iter
-        .map(|x| x.unwrap())
-        .next()
-        .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows)?;
-
-    Ok(article)
+    iter.next()
+        .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows)?
+        .map_err(|err| err)
 }
 
-fn check_article_existence(conn: &rusqlite::Connection, article_id: i32) -> bool {
-    search_article(conn, article_id).is_ok()
-}
-
-pub fn get_all_article(conn: &rusqlite::Connection) -> rusqlite::Result<Vec<Article>> {
-    let mut stmt = conn.prepare(
-        "SELECT article_id, price, manufacturer, stock, category FROM article",
-    )?;
-    let article_iter = stmt.query_map([], |row| {
-        Ok(Article {
-            article_id: row.get(0)?,
-            price: row.get(1)?,
-            manufacturer: row.get(2)?,
-            stock: row.get(3)?,
-            category: row.get(4)?,
-        })
-    })?;
-
-    let mut article_list = Vec::new();
-    for article in article_iter {
-        article_list.push(article?);
+pub fn insert_record<T: Mappable + Insertable>(conn: &Connection, item: &T) -> rusqlite::Result<()> {
+    if T::check_duplicate(conn, item.id_value()) {
+        return Err(rusqlite::Error::ToSqlConversionFailure(Box::new(
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Article ID {} is already beeing used.", item.id_value()).to_string(),
+            ),
+        )));
     }
 
-    Ok(article_list)
+    let table = T::table_name();
+    let columns = T::columns();
+
+    let columns_str = columns.join(", ");
+    let placeholders = (1..=columns.len())
+        .map(|i| format!("?{}", i))
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    let query = format!(
+        "INSERT INTO {} ({}) VALUES ({})",
+        table, columns_str, placeholders
+    );
+
+    let values = item.values();
+
+    conn.execute(&query, rusqlite::params_from_iter(values))?;
+    Ok(())
 }
 
-// Hilfsfunktion zum Erstellen der Tabelle
-pub fn create_table(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
-    conn.execute(
+pub fn fetch_all_records<T: Insertable + Mappable + std::fmt::Debug>(
+    conn: &Connection,
+) -> rusqlite::Result<Vec<T>> {
+    let table = T::table_name();
+    let columns = T::columns().join(",");
+
+    let query = format!("SELECT {} FROM {}", columns, table);
+
+    let mut stmt = conn.prepare(&query)?;
+
+    let iter = stmt.query_map([], |row| T::from_row(row))?;
+
+    let mut item_list = Vec::new();
+    for item in iter {
+        item_list.push(item?);
+    }
+    Ok(item_list)
+}
+
+pub fn initialize_tables(conn: &Connection) -> rusqlite::Result<()> {
+    conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS article (
             id             INTEGER PRIMARY KEY,
             article_id  INTEGER NOT NULL,
@@ -99,42 +117,42 @@ pub fn create_table(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
             manufacturer     TEXT NOT NULL,
             stock          INTEGER NOT NULL, 
             category       TEXT
+        ); 
+        CREATE TABLE IF NOT EXISTS customer (
+            id             INTEGER PRIMARY KEY,
+            customer_id  INTEGER NOT NULL,
+            first_name          TEXT NOT NULL,
+            last_name     TEXT NOT NULL,
+            street          TEXT NOT NULL, 
+            location       TEXT NOT NULL,
+            zip_code       TEXT NOT NULL,
+            email       TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS orders ( 
+            id             INTEGER PRIMARY KEY,
+            order_id       INTEGER NOT NULL,
+            customer_id    INTEGER NOT NULL,
+            article_id     INTEGER NOT NULL
         )",
-        [],
     )?;
     Ok(())
 }
 
-pub fn insert_article(conn: &rusqlite::Connection, article: Article) -> rusqlite::Result<()> {
-    if check_article_existence(conn, article.article_id) {
-        return Err(rusqlite::Error::ToSqlConversionFailure(Box::new(
-            std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                format!("Artikelnummer {} bereits vorhanden", article.article_id).to_string(),
-            ),
-        )));
-    }
-    conn.execute(
-        "INSERT INTO article (article_id, price, manufacturer, stock, category) 
-        VALUES (?1, ?2, ?3, ?4, ?5)",
-        params![
-            article.article_id,
-            article.price,
-            article.manufacturer,
-            article.stock,
-            article.category,
-        ],
-    )?;
-    Ok(())
-}
+pub fn delete_record_by_id<T: Insertable>(
+    conn: &Connection,
+    id: &Option<i32>,
+) -> rusqlite::Result<()> {
+    let id_column = T::id_column();
+    let table = T::table_name();
 
-pub fn delete_article(conn: &rusqlite::Connection, article_id: Option<i32>) -> rusqlite::Result<()> {
-    match article_id {
+    match id {
         Some(id) => {
-            conn.execute("DELETE FROM article WHERE article_id = ?1", params![id])?;
-        },
+            let query = format!("DELETE FROM {} WHERE {} = ?1", table, id_column);
+            conn.execute(&query, params![id])?;
+        }
         None => {
-            conn.execute("DELETE FROM article", params![])?;
+            let query = format!("DELETE FROM {}", table);
+            conn.execute(&query, params![])?;
         }
     }
     Ok(())

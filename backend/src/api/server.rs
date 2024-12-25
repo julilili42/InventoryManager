@@ -1,6 +1,6 @@
 //server.rs
 use crate::api::routes;
-use crate::core::operations::create_table;
+use crate::core::operations::initialize_tables;
 use axum::{Extension, Router};
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
@@ -20,7 +20,7 @@ pub async fn start_api_server() {
 
     let conn = pool.get().expect("Failed to get connection from pool");
 
-    if let Err(e) = create_table(&conn) {
+    if let Err(e) = initialize_tables(&conn) {
         eprintln!("Failed to create table: {}", e);
     }
 

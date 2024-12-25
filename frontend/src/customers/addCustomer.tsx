@@ -5,6 +5,13 @@ import { FormCard } from "@/components/ui/formCard";
 export const AddCustomer = () => {
   const fields = [
     {
+      label: "Customer ID",
+      name: "customer_id",
+      placeholder: "Customer ID",
+      valueAsNumber: true,
+      required: true,
+    },
+    {
       label: "First name",
       name: "first_name",
       placeholder: "First name",

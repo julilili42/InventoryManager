@@ -27,7 +27,7 @@ export const useStore = create<GlobalState>((set) => ({
 
   fetchData: async () => {
     try {
-      const json = await get({ route: "/data" });
+      const json = await get({ route: "/articles" });
       set((state) => {
         // only set if new data
         if (JSON.stringify(state.data) === JSON.stringify(json)) {

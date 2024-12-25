@@ -4,6 +4,10 @@ import { Article } from "@/lib/interfaces";
 
 export const columns: ColumnDef<Article>[] = [
   {
+    accessorKey: "customer_id",
+    header: "Customer ID",
+  },
+  {
     accessorKey: "first_name",
     header: "First Name",
   },

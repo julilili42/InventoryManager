@@ -2,78 +2,79 @@
 use axum::{
     extract::{Extension, Json, Multipart, Path},
     http::StatusCode,
-    response::{Response, Json as AxumJson},
+    response::{Json as AxumJson, Response},
 };
 
 use csv::ReaderBuilder;
-use std::io::Cursor;
+use std::{fmt::Debug, io::Cursor};
 
-use crate::core::operations::{
-    delete_article, get_all_article, get_connection, insert_article,
-    update_article,
-};
 use crate::core::types::{Article, DbPool};
+use crate::core::{
+    operations::{
+        delete_record_by_id, establish_connection, fetch_all_records, insert_record, update_record,
+    },
+    traits::{Mappable, Insertable},
+};
 use serde_json::json;
 
 use crate::api::pdf::generate_pdf;
 
-// IDEE
-// import_csv Funktion parse_csv extrahieren und in operations.rs verschieben
-// import csv Feld namen anpassen auf deutsch (Artikelnummer, Preis, Hersteller, Bestand)
-
-
 // POST /pdf_gen
-pub async fn pdf_gen(
+pub async fn handle_generate_pdf(
     Json(article): Json<Article>,
-) -> Result<Response, (StatusCode, AxumJson<serde_json::Value>)> { 
+) -> Result<Response, (StatusCode, AxumJson<serde_json::Value>)> {
     let pdf_response = generate_pdf(Json(article)).await;
     Ok(pdf_response)
 }
 
-
-
 // GET /data
-pub async fn get_data(
+pub async fn handle_fetch_records<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
-) -> Result<AxumJson<Vec<Article>>, String> {
-    let conn = pool.get().map_err(|_| "Failed to get connection")?;
+) -> Result<AxumJson<Vec<T>>, (StatusCode, AxumJson<serde_json::Value>)> {
+    let conn = establish_connection(&pool)?;
 
-    match get_all_article(&conn) {
-        Ok(artikel_liste) => Ok(AxumJson(artikel_liste)),
-        Err(e) => Err(format!("Failed to fetch data: {}", e)),
+    match fetch_all_records::<T>(&conn) {
+        Ok(item_list) => Ok(AxumJson(item_list)),
+        Err(e) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            AxumJson(json!({ "error": format!("Failed to get connection: {}", e) })),
+        )),
     }
 }
 
 // POST /add_entry
-pub async fn add_entry(
+pub async fn handle_create_record<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
-    Json(article): Json<Article>,
-) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
-    let conn = get_connection(&pool)?;
+    Json(item): Json<T>,
+) -> Result<(StatusCode, AxumJson<serde_json::Value>), (StatusCode, AxumJson<serde_json::Value>)> {
+    let conn = establish_connection(&pool)?;
 
-    match insert_article(&conn, article) {
+    match insert_record::<T>(&conn, &item) {
         Ok(_) => Ok((
             StatusCode::OK,
-            Json(json!({ "message": "Article added successfully" })),
+            AxumJson(json!({ "message": format!("Item added successfully: {}", item.id_value()) })),
         )),
-        Err(e) => Ok((
+        Err(e) => Err((
             StatusCode::BAD_REQUEST,
-            Json(json!({ "error": e.to_string() })),
+            AxumJson(json!({"error": format!("Failed to add item: {}", e)})),
         )),
     }
 }
 
-// DELETE /delete_entry/:article_id
-pub async fn delete_entry(
+// DELETE /delete_entry/:id
+pub async fn handle_delete_record<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
-    article_id: Option<Path<i32>>,
+    id: Option<Path<i32>>,
 ) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
-    let conn = get_connection(&pool)?;
+    let conn = establish_connection(&pool)?;
+    let deletion_id = id.map(|id| id.0);
 
-    match delete_article(&conn, article_id.map(|id| id.0)) {
+    match delete_record_by_id::<T>(&conn, &deletion_id) {
         Ok(_) => Ok((
             StatusCode::OK,
-            Json(json!({ "message": "Article deleted successfully" })),
+            Json(
+                json!({ "message": format!("Item {} deleted successfully", deletion_id.unwrap_or(-1)) }),
+            ),
         )),
         Err(e) => Err((
             StatusCode::BAD_REQUEST,
@@ -83,29 +84,33 @@ pub async fn delete_entry(
 }
 
 // PUT /update_entry
-pub async fn update_entry(
+pub async fn handle_update_record<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
-    Json(payload): Json<Article>,
+    Json(updated_item): Json<T>,
 ) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
-    let conn = get_connection(&pool)?;
+    let conn = establish_connection(&pool)?;
 
-    match update_article(&conn, payload) {
+    match update_record(&conn, &updated_item) {
         Ok(_) => Ok((
             StatusCode::OK,
-            AxumJson(json!({ "message": "Article updated successfully" })),
+            AxumJson(
+                json!({ "message": format!("Record {} updated successfully", updated_item.id_value()) }),
+            ),
         )),
         Err(e) => Err((
             StatusCode::BAD_REQUEST,
-            AxumJson(json!({ "error": e.to_string() })),
+            AxumJson(
+                json!({ "error": format!("Failed to update record {}: {}", updated_item.id_value(), e) }),
+            ),
         )),
     }
 }
 
-pub async fn import_csv(
+pub async fn handle_import_csv(
     Extension(pool): Extension<DbPool>,
     mut multipart: Multipart,
 ) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
-    let conn = get_connection(&pool)?;
+    let conn = establish_connection(&pool)?;
 
     let mut file_data = None;
     while let Some(field) = multipart.next_field().await.unwrap_or(None) {
@@ -137,7 +142,7 @@ pub async fn import_csv(
             )
         })?;
 
-        insert_article(&conn, record).map_err(|e| {
+        insert_record(&conn, &record).map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": format!("Fehler beim Einfügen: {}", e) })),
@@ -150,4 +155,3 @@ pub async fn import_csv(
         Json(json!({ "message": "CSV erfolgreich importiert" })),
     ))
 }
-

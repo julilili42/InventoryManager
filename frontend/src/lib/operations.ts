@@ -6,7 +6,7 @@ import axios from "axios";
 export const addEntry = async (article: Article): Promise<void> => {
   try {
     await post({
-      route: "/add_entry",
+      route: "/articles/add",
       body: {
         article_id: article.article_id,
         price: article.price,
@@ -31,7 +31,7 @@ export const importCSV = async (file: File): Promise<void> => {
   formData.append("file", file);
 
   try {
-    await post({ route: "/import_csv", body: formData });
+    await post({ route: "/articles/import_csv", body: formData });
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
       console.error(
@@ -46,7 +46,7 @@ export const importCSV = async (file: File): Promise<void> => {
 export const deleteEntries = async (articleIds: number[]): Promise<void> => {
   articleIds.forEach(async (articleId) => {
     try {
-      await del({ route: `/delete_entry/${articleId}` });
+      await del({ route: `/articles/delete/${articleId}` });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         console.error(
@@ -62,7 +62,7 @@ export const deleteEntries = async (articleIds: number[]): Promise<void> => {
 export const pdf_gen = async (article: Article): Promise<void> => {
   try {
     const response = await post({
-      route: "/pdf_gen",
+      route: "/articles/pdf_gen",
       body: {
         article_id: article.article_id,
         price: article.price,

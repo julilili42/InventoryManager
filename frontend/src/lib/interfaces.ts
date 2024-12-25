@@ -23,6 +23,7 @@ export interface Article extends FieldValues {
 }
 
 export interface Customer extends FieldValues {
+  customer_id: number;
   first_name: string;
   last_name: string;
   street: string;
