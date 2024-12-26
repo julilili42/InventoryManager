@@ -1,42 +1,61 @@
 // store.ts
 import { create } from "zustand";
-import { Article } from "./interfaces";
+import { Article, Customer } from "./interfaces";
 import { get } from "./api";
 
 export interface GlobalState {
   // global states
   selectedArticle: Article | null;
-  data: Article[] | null;
+  articleData: Article[] | null;
+  customerData: Customer[] | null;
 
   // global state setters
   setSelectedArticle: (id: Article | null) => void;
-  setData: (data: Article[] | null) => void;
+  setArticle: (data: Article[] | null) => void;
+  setCustomer: (data: Customer[] | null) => void;
 
-  fetchData: () => Promise<void>;
+  fetchArticles: () => Promise<void>;
+  fetchCustomers: () => Promise<void>;
 }
 
-export const useStore = create<GlobalState>((set) => ({
-  // global states
-  selectedArticle: null,
-  data: null,
+export const useStore = create<GlobalState>((set) => {
+  const updateIfChanged = <T>(key: keyof GlobalState, newData: T) => {
+    set((state: GlobalState) => {
+      if (JSON.stringify(state[key]) === JSON.stringify(newData)) {
+        return {};
+      }
+      return { [key]: newData };
+    });
+  };
 
-  // gloabl state setters
-  setSelectedArticle: (article: Article | null) =>
-    set({ selectedArticle: article }),
-  setData: (data: Article[] | null) => set({ data }),
+  return {
+    // global states
+    selectedArticle: null,
+    articleData: null,
+    customerData: null,
 
-  fetchData: async () => {
-    try {
-      const json = await get({ route: "/articles" });
-      set((state) => {
-        // only set if new data
-        if (JSON.stringify(state.data) === JSON.stringify(json)) {
-          return state;
-        }
-        return { data: json };
-      });
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Daten:", error);
-    }
-  },
-}));
+    // gloabl state setters
+    setSelectedArticle: (article: Article | null) =>
+      set({ selectedArticle: article }),
+    setArticle: (articleData: Article[] | null) => set({ articleData }),
+    setCustomer: (customerData: Customer[] | null) => set({ customerData }),
+
+    fetchArticles: async () => {
+      try {
+        const json = await get({ route: "/articles" });
+        updateIfChanged<Article>("articleData", json);
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Daten:", error);
+      }
+    },
+
+    fetchCustomers: async () => {
+      try {
+        const json = await get({ route: "/customers" });
+        updateIfChanged<Customer>("customerData", json);
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Daten:", error);
+      }
+    },
+  };
+});

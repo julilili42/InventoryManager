@@ -31,7 +31,7 @@ import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { deleteEntries } from "@/lib/operations";
+import { deleteArticles } from "@/lib/operations";
 import { useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
 
@@ -46,7 +46,7 @@ export function DataTable<TData, TValue>({
   const [selectedArticles, setSelectedArticles] = useState<number[] | null>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-  const { data: db_data, setData } = useStore();
+  const { articleData, setArticle } = useStore();
 
   const table = useReactTable({
     data,
@@ -81,11 +81,13 @@ export function DataTable<TData, TValue>({
   }, [rowSelection]);
 
   const deleteRow = async (delete_ids: number[]) => {
-    await deleteEntries(delete_ids);
-    const new_data = db_data
-      ? db_data.filter((article) => !delete_ids.includes(article.article_id))
+    await deleteArticles(delete_ids);
+    const new_data = articleData
+      ? articleData.filter(
+          (article) => !delete_ids.includes(article.article_id)
+        )
       : null;
-    setData(new_data);
+    setArticle(new_data);
     setRowSelection({});
   };
 

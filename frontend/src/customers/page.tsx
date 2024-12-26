@@ -1,23 +1,23 @@
 // page.tsx
 import { useEffect, useState } from "react";
 import { columns } from "./columns";
-import { DataTable } from "./customerTable";
+import { CustomerTable } from "./customerTable";
 import { useStore } from "@/lib/store";
 
-export function TableArticle() {
+export function TableCustomer() {
   // global
-  const { data, fetchData } = useStore();
+  const { customerData, fetchCustomers } = useStore();
 
   // local
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDataAsync = async () => {
-      await fetchData();
+      await fetchCustomers();
       setLoading(false);
     };
     fetchDataAsync();
-  }, [data]);
+  }, [customerData]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -25,8 +25,8 @@ export function TableArticle() {
 
   return (
     <div className="container py-10 mx-auto">
-      {data ? (
-        <DataTable columns={columns} data={data} />
+      {customerData ? (
+        <CustomerTable columns={columns} data={customerData} />
       ) : (
         <div>Keine Daten verfügbar</div>
       )}

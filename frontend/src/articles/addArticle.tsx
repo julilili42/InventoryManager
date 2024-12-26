@@ -1,11 +1,11 @@
 // card.tsx
 import { Article } from "@/lib/interfaces";
-import { addEntry, importCSV } from "@/lib/operations";
+import { addArticle, importCSV } from "@/lib/operations";
 import { useStore } from "@/lib/store";
 import { FormCard } from "@/components/ui/formCard";
 
 export const AddArticle = () => {
-  const { data, setData, fetchData } = useStore();
+  const { articleData, setArticle, fetchArticles } = useStore();
 
   const fields = [
     {
@@ -43,9 +43,9 @@ export const AddArticle = () => {
 
   const handleSubmitArticle = async (newData: Article) => {
     try {
-      await addEntry(newData);
-      await fetchData();
-      setData([newData, ...(data ?? [])]);
+      await addArticle(newData);
+      await fetchArticles();
+      setArticle([newData, ...(articleData ?? [])]);
       console.log("Article added successfully");
     } catch (error) {
       console.error("Error adding article:", error);
@@ -55,7 +55,7 @@ export const AddArticle = () => {
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       await importCSV(e.target.files[0]);
-      await fetchData();
+      await fetchArticles();
     }
   };
 

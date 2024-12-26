@@ -1,9 +1,9 @@
 // operation.ts
 import { del, post } from "@/lib/api";
-import { Article } from "./interfaces";
+import { Article, Customer } from "./interfaces";
 import axios from "axios";
 
-export const addEntry = async (article: Article): Promise<void> => {
+export const addArticle = async (article: Article): Promise<void> => {
   try {
     await post({
       route: "/articles/add",
@@ -13,6 +13,31 @@ export const addEntry = async (article: Article): Promise<void> => {
         manufacturer: article.manufacturer,
         stock: article.stock,
         ...(article.category && { category: article.category }),
+      },
+    });
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error(
+        "Fehler beim Hinzufügen des Eintrags:",
+        error.response.data.error
+      );
+    }
+    throw error;
+  }
+};
+
+export const addCustomer = async (customer: Customer): Promise<void> => {
+  try {
+    await post({
+      route: "/customers/add",
+      body: {
+        customer_id: customer.customer_id,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        street: customer.street,
+        location: customer.location,
+        zip_code: customer.zip_code,
+        email: customer.email,
       },
     });
   } catch (error) {
@@ -43,14 +68,30 @@ export const importCSV = async (file: File): Promise<void> => {
   }
 };
 
-export const deleteEntries = async (articleIds: number[]): Promise<void> => {
+export const deleteArticles = async (articleIds: number[]): Promise<void> => {
   articleIds.forEach(async (articleId) => {
     try {
       await del({ route: `/articles/delete/${articleId}` });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         console.error(
-          "Fehler beim Löschen des Eintrags:",
+          "Error when deleting article:",
+          error.response.data.error
+        );
+      }
+      throw error;
+    }
+  });
+};
+
+export const deleteCustomers = async (articleIds: number[]): Promise<void> => {
+  articleIds.forEach(async (articleId) => {
+    try {
+      await del({ route: `/customers/delete/${articleId}` });
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        console.error(
+          "Error when deleting customer:",
           error.response.data.error
         );
       }

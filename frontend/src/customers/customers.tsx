@@ -1,5 +1,5 @@
 import { AddCustomer } from "./addCustomer";
-import { TableArticle } from "./page";
+import { TableCustomer } from "./page";
 
 export const Customers = () => {
   return (
@@ -8,7 +8,7 @@ export const Customers = () => {
         <AddCustomer />
       </div>
       <div className="w-full lg:mt-18 lg:w-1/2">
-        <TableArticle />
+        <TableCustomer />
       </div>
     </div>
   );

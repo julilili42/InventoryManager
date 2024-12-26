@@ -77,13 +77,13 @@ pub struct Customer {
 impl Mappable for Customer {
     fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
         Ok(Customer {
-            customer_id: row.get(0).unwrap(),
-            first_name: row.get(1).unwrap(),
-            last_name: row.get(2).unwrap(),
-            street: row.get(3).unwrap(),
-            location: row.get(4).unwrap(),
-            zip_code: row.get(5).unwrap(),
-            email: row.get(6).unwrap(),
+            customer_id: row.get(0)?,
+            first_name: row.get(1)?,
+            last_name: row.get(2)?,
+            street: row.get(3)?,
+            location: row.get(4)?,
+            zip_code: row.get(5)?,
+            email: row.get(6)?,
         })
     }
 }

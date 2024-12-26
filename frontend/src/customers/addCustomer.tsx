@@ -1,8 +1,12 @@
 // AddCustomer.tsx
 import { Customer } from "@/lib/interfaces";
 import { FormCard } from "@/components/ui/formCard";
+import { useStore } from "@/lib/store";
+import { addCustomer } from "@/lib/operations";
 
 export const AddCustomer = () => {
+  const { customerData, setCustomer, fetchCustomers } = useStore();
+
   const fields = [
     {
       label: "Customer ID",
@@ -50,33 +54,25 @@ export const AddCustomer = () => {
     },
   ];
 
+  const handleSubmitCustomer = async (newData: Customer) => {
+    try {
+      console.log(newData);
+      await addCustomer(newData);
+      await fetchCustomers();
+      setCustomer([newData, ...(customerData ?? [])]);
+      console.log("Customer added successfully");
+    } catch (error) {
+      console.error("Error adding customer:", error);
+    }
+  };
+
   return (
     <FormCard<Customer>
       title="Add new Customer"
       fields={fields}
-      onSubmit={() => {}}
+      onSubmit={handleSubmitCustomer}
       onFileImport={() => {}}
       submitLabel="Add Customer"
     />
   );
 };
-
-/*   const handleSubmitCustomer = async (newData: Customer) => {
-    try {
-      // z. B. in der DB speichern
-      await addEntry(newData);
-      await fetchData();
-      setData([newData, ...(data ?? [])]);
-      console.log("Customer added successfully");
-    } catch (error) {
-      console.error("Error adding customer:", error);
-    }
-  }; 
-
-  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      await importCSV(e.target.files[0]);
-      await fetchData();
-    }
-  };
-  */

@@ -31,11 +31,11 @@ import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { deleteEntries } from "@/lib/operations";
+import { deleteCustomers } from "@/lib/operations";
 import { useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
 
-export function DataTable<TData, TValue>({
+export function CustomerTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -43,10 +43,12 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
 
-  const [selectedArticles, setSelectedArticles] = useState<number[] | null>([]);
+  const [selectedCustomers, setSelectedCustomers] = useState<number[] | null>(
+    []
+  );
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-  const { data: db_data, setData } = useStore();
+  const { customerData, setCustomer } = useStore();
 
   const table = useReactTable({
     data,
@@ -73,19 +75,21 @@ export function DataTable<TData, TValue>({
   });
 
   useEffect(() => {
-    const selectedArticles = table
+    const selectedCustomers = table
       .getSelectedRowModel()
-      .flatRows.map((row) => row.getValue("article_id") as number);
+      .flatRows.map((row) => row.getValue("customer_id") as number);
 
-    setSelectedArticles(selectedArticles);
+    setSelectedCustomers(selectedCustomers);
   }, [rowSelection]);
 
   const deleteRow = async (delete_ids: number[]) => {
-    await deleteEntries(delete_ids);
-    const new_data = db_data
-      ? db_data.filter((article) => !delete_ids.includes(article.article_id))
+    await deleteCustomers(delete_ids);
+    const new_data = customerData
+      ? customerData.filter(
+          (customer) => !delete_ids.includes(customer.customer_id)
+        )
       : null;
-    setData(new_data);
+    setCustomer(new_data);
     setRowSelection({});
   };
 
@@ -93,12 +97,12 @@ export function DataTable<TData, TValue>({
     <div>
       <div className="flex items-center justify-between py-4">
         <Input
-          placeholder="Filter article id.."
+          placeholder="Filter customer id.."
           value={
-            (table.getColumn("article_id")?.getFilterValue() as string) ?? ""
+            (table.getColumn("customer_id")?.getFilterValue() as string) ?? ""
           }
           onChange={(event: any) =>
-            table.getColumn("article_id")?.setFilterValue(event.target.value)
+            table.getColumn("customer_id")?.setFilterValue(event.target.value)
           }
           className="w-fit"
         />
@@ -106,7 +110,7 @@ export function DataTable<TData, TValue>({
         <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
           <Button
             variant={"destructive_muted"}
-            onClick={() => deleteRow(selectedArticles ?? [])}
+            onClick={() => deleteRow(selectedCustomers ?? [])}
           >
             <Trash2 /> Delete
           </Button>
@@ -122,7 +126,7 @@ export function DataTable<TData, TValue>({
                 .filter((column) => column.getCanHide())
                 .map((column) => {
                   const column_name =
-                    column.id === "article_id" ? "Article ID" : column.id;
+                    column.id === "customer_id" ? "Customer ID" : column.id;
                   return (
                     <DropdownMenuCheckboxItem
                       key={column_name}

@@ -125,7 +125,7 @@ pub fn initialize_tables(conn: &Connection) -> rusqlite::Result<()> {
             last_name     TEXT NOT NULL,
             street          TEXT NOT NULL, 
             location       TEXT NOT NULL,
-            zip_code       TEXT NOT NULL,
+            zip_code       INTEGER NOT NULL,
             email       TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS orders ( 

@@ -6,18 +6,18 @@ import { useStore } from "@/lib/store";
 
 export function TableArticle() {
   // global
-  const { data, fetchData } = useStore();
+  const { articleData, fetchArticles } = useStore();
 
   // local
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDataAsync = async () => {
-      await fetchData();
+      await fetchArticles();
       setLoading(false);
     };
     fetchDataAsync();
-  }, [data]);
+  }, [articleData]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -25,8 +25,8 @@ export function TableArticle() {
 
   return (
     <div className="container py-10 mx-auto">
-      {data ? (
-        <DataTable columns={columns} data={data} />
+      {articleData ? (
+        <DataTable columns={columns} data={articleData} />
       ) : (
         <div>Keine Daten verfügbar</div>
       )}
