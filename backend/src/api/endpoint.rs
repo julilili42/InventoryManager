@@ -8,12 +8,12 @@ use axum::{
 use csv::ReaderBuilder;
 use std::{fmt::Debug, io::Cursor};
 
-use crate::core::types::{Article, DbPool};
+use crate::core::types::{Article, DbPool, PdfRequest};
 use crate::core::{
     operations::{
         delete_record_by_id, establish_connection, fetch_all_records, insert_record, update_record,
     },
-    traits::{Mappable, Insertable},
+    traits::{Insertable, Mappable},
 };
 use serde_json::json;
 
@@ -21,9 +21,9 @@ use crate::api::pdf::generate_pdf;
 
 // POST /pdf_gen
 pub async fn handle_generate_pdf(
-    Json(article): Json<Article>,
+    Json(data): Json<PdfRequest>,
 ) -> Result<Response, (StatusCode, AxumJson<serde_json::Value>)> {
-    let pdf_response = generate_pdf(Json(article)).await;
+    let pdf_response = generate_pdf(Json(data)).await;
     Ok(pdf_response)
 }
 

@@ -1,7 +1,8 @@
 // types.rs
-use crate::core::operations::find_record_by_id;
-use crate::core::traits::{Mappable, Insertable, Searchable};
+use crate::core::operations::{fetch_articles_for_order, find_record_by_id};
+use crate::core::traits::{Insertable, Mappable, Searchable};
 use r2d2_sqlite::SqliteConnectionManager;
+use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -15,7 +16,10 @@ pub struct Article {
 }
 
 impl Mappable for Article {
-    fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
+    fn from_row(
+        row: &rusqlite::Row,
+        _conn: Option<&rusqlite::Connection>,
+    ) -> rusqlite::Result<Self> {
         Ok(Article {
             article_id: row.get(0)?,
             price: row.get(1)?,
@@ -75,7 +79,10 @@ pub struct Customer {
 }
 
 impl Mappable for Customer {
-    fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
+    fn from_row(
+        row: &rusqlite::Row,
+        _conn: Option<&rusqlite::Connection>,
+    ) -> rusqlite::Result<Self> {
         Ok(Customer {
             customer_id: row.get(0)?,
             first_name: row.get(1)?,
@@ -138,6 +145,109 @@ pub struct Order {
     pub order_id: i32,
     pub customer: Customer,
     pub article: Vec<(Article, i32)>,
+}
+
+impl Mappable for Order {
+    fn from_row(
+        row: &rusqlite::Row,
+        conn: Option<&rusqlite::Connection>,
+    ) -> rusqlite::Result<Self> {
+        let article_id = row.get(0)?;
+        let fetched_articles = match conn {
+            Some(conn) => fetch_articles_for_order(conn, article_id)?,
+            None => {
+                return Err(rusqlite::Error::InvalidParameterName(String::from(
+                    "Connection is None",
+                )))
+            }
+        };
+
+        let customer_id = row.get(1)?;
+        let fetched_customer = match conn {
+            Some(conn) => find_record_by_id::<Customer>(conn, customer_id)?,
+            None => {
+                return Err(rusqlite::Error::InvalidParameterName(String::from(
+                    "Connection is None",
+                )))
+            }
+        };
+
+        Ok(Order {
+            order_id: row.get(0)?,
+            customer: fetched_customer,
+            article: fetched_articles,
+        })
+    }
+}
+
+impl Insertable for Order {
+    fn table_name() -> &'static str {
+        "orders"
+    }
+    fn columns() -> Vec<&'static str> {
+        vec!["order_id", "customer_id"]
+    }
+    fn id_column() -> &'static str {
+        "order_id"
+    }
+
+    fn id_value(&self) -> i32 {
+        self.order_id
+    }
+
+    fn values(&self) -> Vec<rusqlite::types::ToSqlOutput<'_>> {
+        vec![self.order_id.into(), self.customer.customer_id.into()]
+    }
+
+    fn post_insert(&self, conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+        let query = "
+            INSERT INTO order_article (order_id, article_id, quantity)
+            VALUES (?1, ?2, ?3)
+        ";
+
+        let mut stmt = conn.prepare(query)?;
+
+        for (article, quantity) in &self.article {
+            stmt.execute(params![self.order_id, article.article_id, quantity])?;
+        }
+
+        Ok(())
+    }
+
+    fn post_delete(id_value: Option<&i32>, conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+        
+        match id_value {
+            Some(id_value) => {
+                let query = "DELETE FROM order_article WHERE order_id = ?1";
+
+                conn.execute(query, params![id_value])?;   
+            }
+            None => {
+                let query = "DELETE FROM order_article";
+
+                conn.execute(query, params![])?;
+            }
+        }
+
+        
+        Ok(())
+    }
+
+}
+
+impl Searchable for Order {
+    fn search(conn: &rusqlite::Connection, id: i32) -> rusqlite::Result<Self>
+    where
+        Self: Sized,
+    {
+        find_record_by_id(conn, id)
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct PdfRequest {
+    pub articles: Article,
+    pub customer: Customer,
 }
 
 pub type DbPool = Arc<r2d2::Pool<SqliteConnectionManager>>;

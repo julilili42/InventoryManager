@@ -3,8 +3,9 @@ use rusqlite::{params, Connection};
 
 use axum::{http::StatusCode, response::Json as AxumJson};
 
-use crate::core::traits::{Mappable, Insertable};
-use crate::core::types::DbPool;
+use crate::core::traits::{Insertable, Mappable};
+use std::fmt::Debug;
+use crate::core::types::{Article, DbPool};
 use serde_json::json;
 
 use r2d2::PooledConnection;
@@ -50,21 +51,27 @@ pub fn find_record_by_id<T: Mappable + Insertable>(
 ) -> rusqlite::Result<T> {
     let table = T::table_name();
     let id_column = T::id_column();
-    let query = format!("SELECT * FROM {} WHERE {} = ?1", table, id_column);
+    let columns = T::columns().join(",");
+
+    let query = format!("SELECT {} FROM {} WHERE {} = ?1", columns, table, id_column);
+
     let mut stmt = conn.prepare(&query)?;
-    let mut iter = stmt.query_map([id_value], |row| T::from_row(row))?;
+    let mut iter = stmt.query_map([id_value], |row| T::from_row(row, Some(conn)))?;
 
     iter.next()
         .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows)?
         .map_err(|err| err)
 }
 
-pub fn insert_record<T: Mappable + Insertable>(conn: &Connection, item: &T) -> rusqlite::Result<()> {
+pub fn insert_record<T: Mappable + Insertable>(
+    conn: &Connection,
+    item: &T,
+) -> rusqlite::Result<()> {
     if T::check_duplicate(conn, item.id_value()) {
         return Err(rusqlite::Error::ToSqlConversionFailure(Box::new(
             std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
-                format!("Article ID {} is already beeing used.", item.id_value()).to_string(),
+                format!("Item id {} is already beeing used.", item.id_value()).to_string(),
             ),
         )));
     }
@@ -85,21 +92,52 @@ pub fn insert_record<T: Mappable + Insertable>(conn: &Connection, item: &T) -> r
 
     let values = item.values();
 
+
     conn.execute(&query, rusqlite::params_from_iter(values))?;
+
+    item.post_insert(conn)?;
+
     Ok(())
 }
 
-pub fn fetch_all_records<T: Insertable + Mappable + std::fmt::Debug>(
+pub fn delete_record_by_id<T: Mappable + Insertable + Debug>(
+    conn: &Connection,
+    id: &Option<i32>,
+) -> rusqlite::Result<()> {
+    let id_column = T::id_column();
+    let table = T::table_name();
+
+    match id {
+        Some(id_value) => {
+            let query = format!("DELETE FROM {} WHERE {} = ?1", table, id_column);
+            conn.execute(&query, params![id_value])?;
+
+            // Post delete used for Order Type, to delete id-entry in article_order table
+            T::post_delete(Some(id_value), conn)?;
+        }
+        None => {
+            let query = format!("DELETE FROM {}", table);
+            conn.execute(&query, params![])?;
+
+            // Post delete used for Order Type, to delete all-entries in article_order table
+            T::post_delete(None, conn)?;
+        }
+    }
+    Ok(())
+}
+
+pub fn fetch_all_records<T: Insertable + Mappable>(
     conn: &Connection,
 ) -> rusqlite::Result<Vec<T>> {
     let table = T::table_name();
+
     let columns = T::columns().join(",");
 
     let query = format!("SELECT {} FROM {}", columns, table);
 
     let mut stmt = conn.prepare(&query)?;
 
-    let iter = stmt.query_map([], |row| T::from_row(row))?;
+    let iter = stmt.query_map([], |row| T::from_row(row, Some(conn)))?;
 
     let mut item_list = Vec::new();
     for item in iter {
@@ -108,52 +146,77 @@ pub fn fetch_all_records<T: Insertable + Mappable + std::fmt::Debug>(
     Ok(item_list)
 }
 
+pub fn fetch_articles_for_order(
+    conn: &rusqlite::Connection,
+    order_id: i32,
+) -> rusqlite::Result<Vec<(Article, i32)>> {
+    let mut stmt = conn.prepare(
+        "
+        SELECT a.article_id, a.price, a.manufacturer, a.stock, a.category, oa.quantity
+        FROM article a
+        JOIN order_article oa ON a.article_id = oa.article_id
+        WHERE oa.order_id = ?
+        ",
+    )?;
+
+    let article_iter = stmt.query_map([order_id], |row| {
+        let article = Article {
+            article_id: row.get(0)?,
+            price: row.get(1)?,
+            manufacturer: row.get(2)?,
+            stock: row.get(3)?,
+            category: row.get(4)?,
+        };
+        let quantity: i32 = row.get(5)?;
+        Ok((article, quantity))
+    })?;
+
+    article_iter.collect::<Result<Vec<_>, _>>()
+}
+
 pub fn initialize_tables(conn: &Connection) -> rusqlite::Result<()> {
     conn.execute_batch(
-        "CREATE TABLE IF NOT EXISTS article (
+        "
+        -- Table for articles
+        CREATE TABLE IF NOT EXISTS article (
             id             INTEGER PRIMARY KEY,
-            article_id  INTEGER NOT NULL,
+            article_id     INTEGER NOT NULL,
             price          REAL NOT NULL,
-            manufacturer     TEXT NOT NULL,
+            manufacturer   TEXT NOT NULL,
             stock          INTEGER NOT NULL, 
             category       TEXT
         ); 
+
+        -- Table for customers
         CREATE TABLE IF NOT EXISTS customer (
             id             INTEGER PRIMARY KEY,
-            customer_id  INTEGER NOT NULL,
-            first_name          TEXT NOT NULL,
-            last_name     TEXT NOT NULL,
-            street          TEXT NOT NULL, 
+            customer_id    INTEGER NOT NULL,
+            first_name     TEXT NOT NULL,
+            last_name      TEXT NOT NULL,
+            street         TEXT NOT NULL, 
             location       TEXT NOT NULL,
             zip_code       INTEGER NOT NULL,
-            email       TEXT NOT NULL
+            email          TEXT NOT NULL
         );
+
+        -- Table for orders
         CREATE TABLE IF NOT EXISTS orders ( 
             id             INTEGER PRIMARY KEY,
             order_id       INTEGER NOT NULL,
             customer_id    INTEGER NOT NULL,
-            article_id     INTEGER NOT NULL
-        )",
+            FOREIGN KEY(customer_id) REFERENCES customer(customer_id)
+        );
+
+        -- Table for order-article relationships
+        CREATE TABLE IF NOT EXISTS order_article (
+            id           INTEGER PRIMARY KEY,
+            order_id     INTEGER NOT NULL,
+            article_id   INTEGER NOT NULL,
+            quantity     INTEGER NOT NULL,
+            FOREIGN KEY (order_id) REFERENCES orders(order_id),
+            FOREIGN KEY (article_id) REFERENCES article(article_id)
+        );
+        ",
     )?;
-    Ok(())
-}
-
-pub fn delete_record_by_id<T: Insertable>(
-    conn: &Connection,
-    id: &Option<i32>,
-) -> rusqlite::Result<()> {
-    let id_column = T::id_column();
-    let table = T::table_name();
-
-    match id {
-        Some(id) => {
-            let query = format!("DELETE FROM {} WHERE {} = ?1", table, id_column);
-            conn.execute(&query, params![id])?;
-        }
-        None => {
-            let query = format!("DELETE FROM {}", table);
-            conn.execute(&query, params![])?;
-        }
-    }
     Ok(())
 }

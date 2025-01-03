@@ -3,12 +3,11 @@ use crate::api::endpoint::{
     handle_create_record, handle_delete_record, handle_fetch_records, handle_generate_pdf,
     handle_import_csv, handle_update_record,
 };
-use crate::core::types::{Article, Customer};
+use crate::core::types::{Article, Customer, Order};
 use axum::{
     routing::{delete, get, post, put},
     Router,
 };
-
 
 pub fn article_routes() -> Router {
     Router::new()
@@ -39,8 +38,18 @@ pub fn customer_routes() -> Router {
         .route("/customers/update", put(handle_update_record::<Customer>))
 }
 
+pub fn order_routes() -> Router {
+    Router::new()
+        .route("/orders", get(handle_fetch_records::<Order>))
+        .route("/orders/add", post(handle_create_record::<Order>))
+        .route("/orders/delete", delete(handle_delete_record::<Order>))
+        .route("/orders/delete/:id", delete(handle_delete_record::<Order>))
+        .route("/orders/update", put(handle_update_record::<Order>))
+}
+
 pub fn get_routes() -> Router {
     Router::new()
         .nest("/api", article_routes())
         .nest("/api", customer_routes())
+        .nest("/api", order_routes())
 }

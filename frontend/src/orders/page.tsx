@@ -1,23 +1,23 @@
 // page.tsx
 import { useEffect, useState } from "react";
-import { columns } from "./columns";
-import { ArticleTable } from "./articleTable";
+import { OrderTable } from "./orderTable";
 import { useStore } from "@/lib/store";
+import { columns } from "./columns";
 
-export function TableArticle() {
+export function TableOrder() {
   // global
-  const { articleData, fetchArticles } = useStore();
+  const { orderData, fetchOrders } = useStore();
 
   // local
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDataAsync = async () => {
-      await fetchArticles();
+    const fetchOrderAsync = async () => {
+      await fetchOrders();
       setLoading(false);
     };
-    fetchDataAsync();
-  }, [articleData]);
+    fetchOrderAsync();
+  }, [orderData]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -25,8 +25,8 @@ export function TableArticle() {
 
   return (
     <div className="container py-10 mx-auto">
-      {articleData ? (
-        <ArticleTable columns={columns} data={articleData} />
+      {orderData ? (
+        <OrderTable columns={columns} data={orderData} />
       ) : (
         <div>Keine Daten verfügbar</div>
       )}

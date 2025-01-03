@@ -1,4 +1,4 @@
-// articleTable.tsx
+// orderTable.tsx
 import {
   flexRender,
   getCoreRowModel,
@@ -31,11 +31,11 @@ import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { deleteArticles } from "@/lib/operations";
+import { deleteOrders } from "@/lib/operations";
 import { useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
 
-export function ArticleTable<TData, TValue>({
+export function OrderTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -43,10 +43,10 @@ export function ArticleTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
 
-  const [selectedArticles, setSelectedArticles] = useState<number[] | null>([]);
+  const [selectedOrders, setSelectedOrders] = useState<number[] | null>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-  const { articleData, setArticle } = useStore();
+  const { orderData, setOrder } = useStore();
 
   const table = useReactTable({
     data,
@@ -75,19 +75,17 @@ export function ArticleTable<TData, TValue>({
   useEffect(() => {
     const selectedArticles = table
       .getSelectedRowModel()
-      .flatRows.map((row) => row.getValue("article_id") as number);
+      .flatRows.map((row) => row.getValue("order_id") as number);
 
-    setSelectedArticles(selectedArticles);
+    setSelectedOrders(selectedArticles);
   }, [rowSelection]);
 
   const deleteRow = async (delete_ids: number[]) => {
-    await deleteArticles(delete_ids);
-    const new_data = articleData
-      ? articleData.filter(
-          (article) => !delete_ids.includes(article.article_id)
-        )
+    await deleteOrders(delete_ids);
+    const new_data = orderData
+      ? orderData.filter((order) => !delete_ids.includes(order.order_id))
       : null;
-    setArticle(new_data);
+    setOrder(new_data);
     setRowSelection({});
   };
 
@@ -95,12 +93,12 @@ export function ArticleTable<TData, TValue>({
     <div>
       <div className="flex items-center justify-between py-4">
         <Input
-          placeholder="Filter article id.."
+          placeholder="Filter order id.."
           value={
-            (table.getColumn("article_id")?.getFilterValue() as string) ?? ""
+            (table.getColumn("order_id")?.getFilterValue() as string) ?? ""
           }
           onChange={(event: any) =>
-            table.getColumn("article_id")?.setFilterValue(event.target.value)
+            table.getColumn("order_id")?.setFilterValue(event.target.value)
           }
           className="w-fit"
         />
@@ -108,7 +106,7 @@ export function ArticleTable<TData, TValue>({
         <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
           <Button
             variant={"destructive_muted"}
-            onClick={() => deleteRow(selectedArticles ?? [])}
+            onClick={() => deleteRow(selectedOrders ?? [])}
           >
             <Trash2 /> Delete
           </Button>
@@ -124,7 +122,7 @@ export function ArticleTable<TData, TValue>({
                 .filter((column) => column.getCanHide())
                 .map((column) => {
                   const column_name =
-                    column.id === "article_id" ? "Article ID" : column.id;
+                    column.id === "order_id" ? "Order ID" : column.id;
                   return (
                     <DropdownMenuCheckboxItem
                       key={column_name}

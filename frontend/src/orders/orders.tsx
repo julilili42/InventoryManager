@@ -1,15 +1,27 @@
 import { Button } from "@/components/ui/button";
-import { pdf_gen } from "@/lib/operations";
+import { pdf_gen, pdfRequest } from "@/lib/operations";
 import { AddOrder } from "./addOrder";
 import { OrderLog } from "./orderLog";
+import { TableOrder } from "./page";
 
 export const Orders = () => {
-  const test_article = {
-    article_id: 1,
-    price: 1,
-    manufacturer: "test",
-    stock: 1,
-    category: "small",
+  const test_article: pdfRequest = {
+    article: {
+      article_id: 1,
+      price: 1,
+      manufacturer: "test",
+      stock: 1,
+      category: "small",
+    },
+    customer: {
+      customer_id: 1,
+      first_name: "Julian",
+      last_name: "Jurcevic",
+      email: "test",
+      location: "Reutlingen",
+      street: "Grüner Weg 26",
+      zip_code: 72766,
+    },
   };
 
   return (
@@ -23,6 +35,9 @@ export const Orders = () => {
               Test Generierung
             </Button>
           </div>
+        </div>
+        <div className="w-full lg:mt-18 lg:w-1/2">
+          <TableOrder />
         </div>
       </div>
     </div>

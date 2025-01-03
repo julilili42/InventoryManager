@@ -1,4 +1,4 @@
-// data-table.tsx
+// customerTable.tsx
 import {
   flexRender,
   getCoreRowModel,
@@ -92,7 +92,6 @@ export function CustomerTable<TData, TValue>({
     setCustomer(new_data);
     setRowSelection({});
   };
-
   return (
     <div>
       <div className="flex items-center justify-between py-4">
@@ -106,7 +105,6 @@ export function CustomerTable<TData, TValue>({
           }
           className="w-fit"
         />
-
         <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
           <Button
             variant={"destructive_muted"}

@@ -84,10 +84,10 @@ export const deleteArticles = async (articleIds: number[]): Promise<void> => {
   });
 };
 
-export const deleteCustomers = async (articleIds: number[]): Promise<void> => {
-  articleIds.forEach(async (articleId) => {
+export const deleteCustomers = async (customerIds: number[]): Promise<void> => {
+  customerIds.forEach(async (customerId) => {
     try {
-      await del({ route: `/customers/delete/${articleId}` });
+      await del({ route: `/customers/delete/${customerId}` });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         console.error(
@@ -100,16 +100,48 @@ export const deleteCustomers = async (articleIds: number[]): Promise<void> => {
   });
 };
 
-export const pdf_gen = async (article: Article): Promise<void> => {
+export const deleteOrders = async (orderIds: number[]): Promise<void> => {
+  orderIds.forEach(async (orderId) => {
+    try {
+      await del({ route: `/orders/delete/${orderId}` });
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        console.error(
+          "Error when deleting customer:",
+          error.response.data.error
+        );
+      }
+      throw error;
+    }
+  });
+};
+
+export interface pdfRequest {
+  article: Article;
+  customer: Customer;
+}
+
+export const pdf_gen = async (data: pdfRequest): Promise<void> => {
   try {
     const response = await post({
       route: "/articles/pdf_gen",
       body: {
-        article_id: article.article_id,
-        price: article.price,
-        manufacturer: article.manufacturer,
-        stock: article.stock,
-        ...(article.category && { category: article.category }),
+        articles: {
+          article_id: data.article.article_id,
+          price: data.article.price,
+          manufacturer: data.article.manufacturer,
+          stock: data.article.stock,
+          ...(data.article.category && { category: data.article.category }),
+        },
+        customer: {
+          customer_id: data.customer.customer_id,
+          first_name: data.customer.first_name,
+          last_name: data.customer.last_name,
+          email: data.customer.email,
+          location: data.customer.location,
+          street: data.customer.street,
+          zip_code: data.customer.zip_code,
+        },
       },
       responseType: "blob",
     });
@@ -122,7 +154,7 @@ export const pdf_gen = async (article: Article): Promise<void> => {
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = `article_${article.article_id}.pdf`;
+    link.download = `article_${data.article.article_id}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
