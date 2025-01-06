@@ -35,5 +35,5 @@ export interface Customer extends FieldValues {
 export interface Order extends FieldValues {
   order_id: number;
   customer: Customer;
-  articles: Map<Article, number>;
+  article: [Article, number][];
 }

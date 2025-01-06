@@ -1,13 +1,20 @@
 //routes.rs
 use crate::api::endpoint::{
     handle_create_record, handle_delete_record, handle_fetch_records, handle_generate_pdf,
-    handle_import_csv, handle_update_record,
+    handle_import_csv, handle_update_record, handle_search
 };
 use crate::core::types::{Article, Customer, Order};
 use axum::{
     routing::{delete, get, post, put},
     Router,
 };
+
+
+pub fn operation_routes() -> Router {
+    Router::new()
+        .route("/operations/pdf", post(handle_generate_pdf))
+    }   
+
 
 pub fn article_routes() -> Router {
     Router::new()
@@ -20,7 +27,7 @@ pub fn article_routes() -> Router {
         )
         .route("/articles/update", put(handle_update_record::<Article>))
         .route("/articles/import_csv", post(handle_import_csv))
-        .route("/articles/pdf_gen", post(handle_generate_pdf))
+        .route("/articles/search/:id", get(handle_search::<Article>))
 }
 
 pub fn customer_routes() -> Router {
@@ -36,6 +43,7 @@ pub fn customer_routes() -> Router {
             delete(handle_delete_record::<Customer>),
         )
         .route("/customers/update", put(handle_update_record::<Customer>))
+        .route("/customers/search/:id", get(handle_search::<Customer>))
 }
 
 pub fn order_routes() -> Router {
@@ -45,10 +53,11 @@ pub fn order_routes() -> Router {
         .route("/orders/delete", delete(handle_delete_record::<Order>))
         .route("/orders/delete/:id", delete(handle_delete_record::<Order>))
         .route("/orders/update", put(handle_update_record::<Order>))
-}
+    }
 
 pub fn get_routes() -> Router {
     Router::new()
+        .nest("/api", operation_routes())
         .nest("/api", article_routes())
         .nest("/api", customer_routes())
         .nest("/api", order_routes())

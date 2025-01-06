@@ -8,7 +8,7 @@ use axum::{
 use csv::ReaderBuilder;
 use std::{fmt::Debug, io::Cursor};
 
-use crate::core::types::{Article, DbPool, PdfRequest};
+use crate::core::{operations::find_record_by_id, types::{Article, DbPool, PdfRequest}};
 use crate::core::{
     operations::{
         delete_record_by_id, establish_connection, fetch_all_records, insert_record, update_record,
@@ -27,7 +27,23 @@ pub async fn handle_generate_pdf(
     Ok(pdf_response)
 }
 
-// GET /data
+pub async fn handle_search<T: Mappable + Insertable>(
+    Extension(pool): Extension<DbPool>,
+    id: Path<i32>,
+) -> Result<AxumJson<T>, (StatusCode, AxumJson<serde_json::Value>)> {
+    let conn = establish_connection(&pool)?;
+    let search_id = id.0;
+
+    match find_record_by_id::<T>(&conn, search_id) {
+        Ok(item) => Ok(AxumJson(item)),
+        Err(e) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            AxumJson(json!({"error": format!("Failed to search id {}: {}", search_id, e)}))
+        ))
+    }
+}
+
+// GET /<T>
 pub async fn handle_fetch_records<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
 ) -> Result<AxumJson<Vec<T>>, (StatusCode, AxumJson<serde_json::Value>)> {
@@ -42,7 +58,7 @@ pub async fn handle_fetch_records<T: Mappable + Insertable + Debug>(
     }
 }
 
-// POST /add_entry
+// POST /<T>/add
 pub async fn handle_create_record<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
     Json(item): Json<T>,
@@ -61,7 +77,7 @@ pub async fn handle_create_record<T: Mappable + Insertable + Debug>(
     }
 }
 
-// DELETE /delete_entry/:id
+// DELETE /<T>/delete (optional /:id)
 pub async fn handle_delete_record<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
     id: Option<Path<i32>>,
@@ -83,7 +99,7 @@ pub async fn handle_delete_record<T: Mappable + Insertable + Debug>(
     }
 }
 
-// PUT /update_entry
+// PUT /<T>/update
 pub async fn handle_update_record<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
     Json(updated_item): Json<T>,

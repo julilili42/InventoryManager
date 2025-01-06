@@ -1,6 +1,6 @@
 // operation.ts
-import { del, post } from "@/lib/api";
-import { Article, Customer } from "./interfaces";
+import { del, post, get } from "@/lib/api";
+import { Article, Customer, Order } from "./interfaces";
 import axios from "axios";
 
 export const addArticle = async (article: Article): Promise<void> => {
@@ -51,6 +51,27 @@ export const addCustomer = async (customer: Customer): Promise<void> => {
   }
 };
 
+export const addOrder = async (order: Order): Promise<void> => {
+  try {
+    await post({
+      route: "/orders/add",
+      body: {
+        order_id: order.order_id,
+        customer: order.customer,
+        article: [order.article],
+      },
+    });
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error(
+        "Fehler beim Hinzufügen des Eintrags:",
+        error.response.data.error
+      );
+    }
+    throw error;
+  }
+};
+
 export const importCSV = async (file: File): Promise<void> => {
   const formData = new FormData();
   formData.append("file", file);
@@ -84,6 +105,18 @@ export const deleteArticles = async (articleIds: number[]): Promise<void> => {
   });
 };
 
+export const searchArticle = async (article_id: number): Promise<any> => {
+  try {
+    const article = await get({ route: `/articles/search/${article_id}` });
+    return article;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("Error when searching article:", error.response.data.error);
+    }
+    throw error;
+  }
+};
+
 export const deleteCustomers = async (customerIds: number[]): Promise<void> => {
   customerIds.forEach(async (customerId) => {
     try {
@@ -100,16 +133,28 @@ export const deleteCustomers = async (customerIds: number[]): Promise<void> => {
   });
 };
 
+export const searchCustomer = async (customer_id: number): Promise<any> => {
+  try {
+    const customer = await get({ route: `/customers/search/${customer_id}` });
+    return customer;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error(
+        "Error when searching customer:",
+        error.response.data.error
+      );
+    }
+    throw error;
+  }
+};
+
 export const deleteOrders = async (orderIds: number[]): Promise<void> => {
   orderIds.forEach(async (orderId) => {
     try {
       await del({ route: `/orders/delete/${orderId}` });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        console.error(
-          "Error when deleting customer:",
-          error.response.data.error
-        );
+        console.error("Error when deleting order:", error.response.data.error);
       }
       throw error;
     }
@@ -124,7 +169,7 @@ export interface pdfRequest {
 export const pdf_gen = async (data: pdfRequest): Promise<void> => {
   try {
     const response = await post({
-      route: "/articles/pdf_gen",
+      route: "/operations/pdf",
       body: {
         articles: {
           article_id: data.article.article_id,
