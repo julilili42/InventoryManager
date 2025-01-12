@@ -67,7 +67,7 @@ export function OrderTable<TData, TValue>({
     },
     initialState: {
       pagination: {
-        pageSize: 15,
+        pageSize: 5,
       },
     },
   });
@@ -102,7 +102,6 @@ export function OrderTable<TData, TValue>({
           }
           className="w-fit"
         />
-
         <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
           <Button
             variant={"destructive_muted"}

@@ -1,3 +1,4 @@
+// articles.tsx
 import { AddArticle } from "@/articles/addArticle";
 import { TableArticle } from "./page";
 

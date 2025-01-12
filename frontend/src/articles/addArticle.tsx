@@ -1,4 +1,4 @@
-// card.tsx
+// addArticle.tsx
 import { Article } from "@/lib/interfaces";
 import { addArticle, importCSV } from "@/lib/operations";
 import { useStore } from "@/lib/store";

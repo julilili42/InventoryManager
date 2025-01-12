@@ -1,4 +1,4 @@
-// AddCustomer.tsx
+// addCustomer.tsx
 import { Customer } from "@/lib/interfaces";
 import { FormCard } from "@/components/ui/formCard";
 import { useStore } from "@/lib/store";

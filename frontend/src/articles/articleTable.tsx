@@ -27,13 +27,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { DataTableProps } from "@/lib/interfaces";
+import { Article, DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { deleteArticles } from "@/lib/operations";
+import { deleteArticles, updateArticle } from "@/lib/operations";
 import { useStore } from "@/lib/store";
-import { Trash2, List } from "lucide-react";
+import { Trash2, List, Pencil } from "lucide-react";
 
 export function ArticleTable<TData, TValue>({
   columns,
@@ -82,12 +82,23 @@ export function ArticleTable<TData, TValue>({
 
   const deleteRow = async (delete_ids: number[]) => {
     await deleteArticles(delete_ids);
-    const new_data = articleData
+    const updatedData = articleData
       ? articleData.filter(
           (article) => !delete_ids.includes(article.article_id)
         )
       : null;
-    setArticle(new_data);
+    setArticle(updatedData);
+    setRowSelection({});
+  };
+
+  const updateRow = async (article: Article) => {
+    await updateArticle(article);
+    const updatedData = articleData
+      ? articleData.map((a: Article) =>
+          a.article_id === article.article_id ? article : a
+        )
+      : null;
+    setArticle(updatedData);
     setRowSelection({});
   };
 

@@ -1,4 +1,4 @@
-//Api.ts
+// api.ts
 import axios from "axios";
 import { Request } from "./interfaces";
 

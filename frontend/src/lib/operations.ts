@@ -1,5 +1,5 @@
 // operation.ts
-import { del, post, get } from "@/lib/api";
+import { del, post, get, put } from "@/lib/api";
 import { Article, Customer, Order } from "./interfaces";
 import axios from "axios";
 
@@ -103,6 +103,26 @@ export const deleteArticles = async (articleIds: number[]): Promise<void> => {
       throw error;
     }
   });
+};
+
+export const updateArticle = async (article: Article): Promise<void> => {
+  try {
+    await put({
+      route: "/articles/update",
+      body: {
+        article_id: article.article_id,
+        price: article.price,
+        manufacturer: article.manufacturer,
+        stock: article.stock,
+        ...(article.category && { category: article.category }),
+      },
+    });
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("Error when updating article:", error.response.data.error);
+    }
+    throw error;
+  }
 };
 
 export const searchArticle = async (article_id: number): Promise<any> => {

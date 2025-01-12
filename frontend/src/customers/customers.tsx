@@ -1,3 +1,4 @@
+// customers.tsx
 import { AddCustomer } from "./addCustomer";
 import { TableCustomer } from "./page";
 
