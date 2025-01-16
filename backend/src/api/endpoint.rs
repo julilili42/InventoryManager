@@ -49,6 +49,7 @@ pub async fn handle_fetch_records<T: Mappable + Insertable + Debug>(
 ) -> Result<AxumJson<Vec<T>>, (StatusCode, AxumJson<serde_json::Value>)> {
     let conn = establish_connection(&pool)?;
 
+
     match fetch_all_records::<T>(&conn) {
         Ok(item_list) => Ok(AxumJson(item_list)),
         Err(e) => Err((

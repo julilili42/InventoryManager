@@ -58,7 +58,7 @@ export const addOrder = async (order: Order): Promise<void> => {
       body: {
         order_id: order.order_id,
         customer: order.customer,
-        article: [order.article],
+        items: order.items,
       },
     });
   } catch (error) {

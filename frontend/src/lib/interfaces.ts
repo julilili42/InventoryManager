@@ -35,5 +35,10 @@ export interface Customer extends FieldValues {
 export interface Order extends FieldValues {
   order_id: number;
   customer: Customer;
-  article: [Article, number][];
+  items: OrderItem[];
+}
+
+export interface OrderItem {
+  article: Article;
+  quantity: number;
 }

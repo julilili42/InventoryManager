@@ -2,15 +2,13 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Order } from "@/lib/interfaces";
+import { Order, OrderItem } from "@/lib/interfaces";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Customer } from "@/lib/interfaces";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
@@ -74,7 +72,7 @@ export const columns: ColumnDef<Order>[] = [
     },
   },
   {
-    accessorKey: "customer",
+    accessorKey: "location",
     header: "Location",
     cell: ({ row }) => {
       const customer: Customer = row.getValue("customer");
@@ -93,49 +91,62 @@ export const columns: ColumnDef<Order>[] = [
     accessorKey: "price",
     header: "Total Price",
     cell: ({ row }) => {
-      const articles = row.getValue("article");
-      if (!Array.isArray(articles)) {
-        console.error("Invalid articles (not an array):", articles);
-        return <div>Invalid articles</div>;
+      const items: OrderItem[] = row.getValue("items");
+
+      if (!Array.isArray(items)) {
+        console.error("Invalid items (not an array):", items);
+        return <div>Invalid items</div>;
       }
 
-      const totalPrice = articles.reduce((sum, item) => {
-        if (Array.isArray(item) && item.length === 2) {
-          const [article, quantity] = item;
-          return sum + article.price * quantity;
-        }
-        return sum;
+      const totalPrice = items.reduce((sum, item: OrderItem) => {
+        const article = item.article;
+        const quantity = item.quantity;
+        return sum + article.price * quantity;
       }, 0);
 
       return <div>{totalPrice.toFixed(2)} €</div>;
     },
   },
-  {
-    accessorKey: "article",
-    header: "Articles",
-    cell: ({ row }) => {
-      const articles = row.getValue("article");
 
-      if (!Array.isArray(articles)) {
-        console.error("Invalid articles (not an array):", articles);
-        return <div>Invalid articles</div>;
+  {
+    accessorKey: "type",
+    header: "Type",
+  },
+  {
+    accessorKey: "date",
+    header: "Date",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+  },
+  {
+    accessorKey: "items",
+    header: "Items",
+    cell: ({ row }) => {
+      const items: OrderItem[] = row.getValue("items");
+
+      if (!Array.isArray(items)) {
+        console.error("Invalid items (not an array):", items);
+        return <div>Invalid items</div>;
       }
 
       return (
         <div>
-          {articles.map((item, index) => {
-            // item is array of length 2: [Article, Quantity]
-            if (Array.isArray(item) && item.length === 2) {
-              const [article, quantity] = item;
-              return (
-                <div key={index}>
-                  <strong>Article ID:</strong> {article.article_id},<br />
-                  <strong>Quantity:</strong> {quantity},<br />
-                  <strong>Price:</strong> {article.price},<br />
-                  <strong>Category:</strong> {article.category}
-                </div>
-              );
-            }
+          {items.map((item: OrderItem, index) => {
+            const article = item.article;
+            const quantity = item.quantity;
+            return (
+              <div key={index}>
+                <strong>Article ID:</strong> {article.article_id}
+                <br />
+                <strong>Quantity:</strong> {quantity}
+                <br />
+                <strong>Price:</strong> {article.price}
+                <br />
+                <br />
+              </div>
+            );
           })}
         </div>
       );

@@ -5,7 +5,7 @@ use axum::{http::StatusCode, response::Json as AxumJson};
 
 use crate::core::traits::{Insertable, Mappable};
 use std::fmt::Debug;
-use crate::core::types::{Article, DbPool};
+use crate::core::types::{Article,OrderItem, DbPool};
 use serde_json::json;
 
 use r2d2::PooledConnection;
@@ -126,7 +126,7 @@ pub fn delete_record_by_id<T: Mappable + Insertable + Debug>(
     Ok(())
 }
 
-pub fn fetch_all_records<T: Insertable + Mappable>(
+pub fn fetch_all_records<T: Insertable + Mappable + Debug>(
     conn: &Connection,
 ) -> rusqlite::Result<Vec<T>> {
     let table = T::table_name();
@@ -143,13 +143,16 @@ pub fn fetch_all_records<T: Insertable + Mappable>(
     for item in iter {
         item_list.push(item?);
     }
+
+    print!("{:?}", item_list);
+
     Ok(item_list)
 }
 
-pub fn fetch_articles_for_order(
+pub fn fetch_order_items(
     conn: &rusqlite::Connection,
     order_id: i32,
-) -> rusqlite::Result<Vec<(Article, i32)>> {
+) -> rusqlite::Result<Vec<OrderItem>> {
     let mut stmt = conn.prepare(
         "
         SELECT a.article_id, a.price, a.manufacturer, a.stock, a.category, oa.quantity
@@ -168,7 +171,8 @@ pub fn fetch_articles_for_order(
             category: row.get(4)?,
         };
         let quantity: i32 = row.get(5)?;
-        Ok((article, quantity))
+        let order_item = OrderItem::new(article, quantity);
+        Ok(order_item)
     })?;
 
     article_iter.collect::<Result<Vec<_>, _>>()

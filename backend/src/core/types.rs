@@ -1,5 +1,5 @@
 // types.rs
-use crate::core::operations::{fetch_articles_for_order, find_record_by_id};
+use crate::core::operations::{fetch_order_items, find_record_by_id};
 use crate::core::traits::{Insertable, Mappable, Searchable};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::params;
@@ -78,6 +78,7 @@ pub struct Customer {
     pub email: String,
 }
 
+ 
 impl Mappable for Customer {
     fn from_row(
         row: &rusqlite::Row,
@@ -140,11 +141,38 @@ impl Searchable for Customer {
     }
 }
 
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct OrderItem {
+    article: Article,
+    quantity: i32,
+}
+
+impl OrderItem {
+    pub fn new(article: Article, quantity: i32) -> Self {
+        OrderItem {
+            article, 
+            quantity
+        }
+    }
+}
+
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Order {
     pub order_id: i32,
     pub customer: Customer,
-    pub article: Vec<(Article, i32)>,
+    pub items: Vec<OrderItem>,
+}
+
+impl Order {
+    pub fn new(order_id: i32, customer: Customer, items: Vec<OrderItem>) -> Self {
+        Order {
+            order_id, 
+            customer,
+            items
+        }
+    }
 }
 
 impl Mappable for Order {
@@ -152,9 +180,9 @@ impl Mappable for Order {
         row: &rusqlite::Row,
         conn: Option<&rusqlite::Connection>,
     ) -> rusqlite::Result<Self> {
-        let article_id = row.get(0)?;
-        let fetched_articles = match conn {
-            Some(conn) => fetch_articles_for_order(conn, article_id)?,
+        let order_id = row.get(0)?;
+        let fetched_order_items = match conn {
+            Some(conn) => fetch_order_items(conn, order_id)?,
             None => {
                 return Err(rusqlite::Error::InvalidParameterName(String::from(
                     "Connection is None",
@@ -172,11 +200,7 @@ impl Mappable for Order {
             }
         };
 
-        Ok(Order {
-            order_id: row.get(0)?,
-            customer: fetched_customer,
-            article: fetched_articles,
-        })
+        Ok(Order::new(order_id, fetched_customer, fetched_order_items))
     }
 }
 
@@ -207,8 +231,8 @@ impl Insertable for Order {
 
         let mut stmt = conn.prepare(query)?;
 
-        for (article, quantity) in &self.article {
-            stmt.execute(params![self.order_id, article.article_id, quantity])?;
+        for order_item in &self.items {
+            stmt.execute(params![self.order_id, order_item.article.article_id, order_item.quantity])?;
         }
 
         Ok(())

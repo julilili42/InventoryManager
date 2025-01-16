@@ -28,17 +28,25 @@ export const AddOrder = () => {
       valueAsNumber: true,
       required: true,
     },
+    {
+      label: "Quantity",
+      name: "quantity",
+      placeholder: "Quantity",
+      valueAsNumber: true,
+      required: true,
+    },
   ];
 
   const handleSubmitOrder = async (input: any) => {
     const fetched_article = await searchArticle(input.article_id);
     const customer = await searchCustomer(input.customer_id);
     const order_id = input.order_id;
+    const quantity = input.quantity;
 
     const newData = {
       order_id: order_id,
       customer: customer,
-      article: [fetched_article, 1],
+      items: [{ article: fetched_article, quantity }],
     };
 
     try {
