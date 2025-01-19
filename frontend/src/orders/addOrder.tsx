@@ -1,5 +1,12 @@
 // addOrder.tsx
-import { Order } from "@/lib/interfaces";
+import {
+  Article,
+  Customer,
+  DeliveryStatus,
+  Order,
+  OrderItem,
+  OrderType,
+} from "@/lib/interfaces";
 import { FormCard } from "@/components/ui/formCard";
 import { useStore } from "@/lib/store";
 import { searchArticle } from "@/lib/services/articleService";
@@ -37,18 +44,46 @@ export const AddOrder = () => {
       valueAsNumber: true,
       required: true,
     },
+    {
+      label: "Type",
+      name: "order_type",
+      placeholder: "Type",
+      valueAsNumber: false,
+      required: true,
+    },
+    {
+      label: "Status",
+      name: "status",
+      placeholder: "Status",
+      valueAsNumber: false,
+      required: true,
+    },
   ];
 
   const handleSubmitOrder = async (input: any) => {
-    const fetched_article = await searchArticle(input.article_id);
-    const customer = await searchCustomer(input.customer_id);
-    const order_id = input.order_id;
-    const quantity = input.quantity;
+    const fetched_article: Article = await searchArticle(input.article_id);
+    const customer: Customer = await searchCustomer(input.customer_id);
 
-    const newData = {
-      order_id: order_id,
+    const orderId: number = input.order_id;
+    const quantity: number = input.quantity;
+    const orderItems: OrderItem[] = [{ article: fetched_article, quantity }];
+
+    const orderDate: string = new Intl.DateTimeFormat("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(new Date());
+
+    const orderType: OrderType = input.order_type;
+    const status: DeliveryStatus = input.status;
+
+    const newData: Order = {
+      order_id: orderId,
       customer: customer,
-      items: [{ article: fetched_article, quantity }],
+      items: orderItems,
+      date: orderDate,
+      order_type: orderType,
+      status: status,
     };
 
     try {

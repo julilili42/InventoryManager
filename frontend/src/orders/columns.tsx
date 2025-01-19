@@ -2,8 +2,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Order, OrderItem } from "@/lib/interfaces";
+import { DeliveryStatus, Order, OrderType } from "@/lib/interfaces";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Customer } from "@/lib/interfaces";
 import {
   DropdownMenu,
@@ -13,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router";
+import { deleteOrders, searchOrders } from "@/lib/services/orderServices";
+import { useEffect, useState } from "react";
 
 export const columns: ColumnDef<Order>[] = [
   {
@@ -50,7 +53,7 @@ export const columns: ColumnDef<Order>[] = [
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label="Select row"
           />
-          {id}
+          <span className="font-semibold">#{id}</span>
         </div>
       );
     },
@@ -92,26 +95,59 @@ export const columns: ColumnDef<Order>[] = [
     accessorKey: "price",
     header: "Total Price",
     cell: ({ row }) => {
-      const items: OrderItem[] = row.getValue("items");
+      const [totalPrice, setTotalPrice] = useState<number | null>(null);
+      useEffect(() => {
+        const fetchTotalPrice = async () => {
+          try {
+            const orderId: number = row.getValue("order_id");
+            const order = await searchOrders(orderId); // Suche die Order
+            if (order) {
+              const price = order.items.reduce(
+                (sum, item) => sum + item.article.price * item.quantity,
+                0
+              );
+              setTotalPrice(price); // Setze den berechneten Preis
+            } else {
+              console.error("Order not found for ID:", orderId);
+              setTotalPrice(0);
+            }
+          } catch (error) {
+            console.error("Error fetching total price:", error);
+            setTotalPrice(0);
+          }
+        };
 
-      if (!Array.isArray(items)) {
-        console.error("Invalid items (not an array):", items);
-        return <div>Invalid items</div>;
+        fetchTotalPrice();
+      }, [row]);
+
+      if (totalPrice === null) {
+        return <div>???</div>;
       }
-
-      const totalPrice = items.reduce((sum, item: OrderItem) => {
-        const article = item.article;
-        const quantity = item.quantity;
-        return sum + article.price * quantity;
-      }, 0);
 
       return <div>{totalPrice.toFixed(2)} €</div>;
     },
   },
 
   {
-    accessorKey: "type",
+    accessorKey: "order_type",
     header: "Type",
+    cell: ({ row }) => {
+      const orderType = row.getValue("order_type");
+      switch (orderType) {
+        case OrderType.Sale:
+          return (
+            <Badge variant={"secondary"} className="rounded-xls">
+              Sale
+            </Badge>
+          );
+        case OrderType.Return:
+          return (
+            <Badge variant={"secondary"} className="rounded-xl">
+              Return
+            </Badge>
+          );
+      }
+    },
   },
   {
     accessorKey: "date",
@@ -120,37 +156,18 @@ export const columns: ColumnDef<Order>[] = [
   {
     accessorKey: "status",
     header: "Status",
-  },
-  {
-    accessorKey: "items",
-    header: "Items",
     cell: ({ row }) => {
-      const items: OrderItem[] = row.getValue("items");
-
-      if (!Array.isArray(items)) {
-        console.error("Invalid items (not an array):", items);
-        return <div>Invalid items</div>;
+      const status: DeliveryStatus = row.getValue("status");
+      switch (status) {
+        case DeliveryStatus.Pending:
+          return <Badge className="bg-yellow-500">Pending</Badge>;
+        case DeliveryStatus.Completed:
+          return <Badge className="bg-green-700">Completed</Badge>;
+        case DeliveryStatus.Shipped:
+          return <Badge className="bg-blue-700">Shipped</Badge>;
+        case DeliveryStatus.Delivered:
+          return <Badge className="bg-teal-700">Delivered</Badge>;
       }
-
-      return (
-        <div>
-          {items.map((item: OrderItem, index) => {
-            const article = item.article;
-            const quantity = item.quantity;
-            return (
-              <div key={index}>
-                <strong>Article ID:</strong> {article.article_id}
-                <br />
-                <strong>Quantity:</strong> {quantity}
-                <br />
-                <strong>Price:</strong> {article.price}
-                <br />
-                <br />
-              </div>
-            );
-          })}
-        </div>
-      );
     },
   },
   {
@@ -158,7 +175,7 @@ export const columns: ColumnDef<Order>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const navigate = useNavigate();
-      const orderId = row.getValue("order_id");
+      const orderId: number = row.getValue("order_id");
 
       return (
         <DropdownMenu>
@@ -174,7 +191,9 @@ export const columns: ColumnDef<Order>[] = [
             </DropdownMenuItem>
             <DropdownMenuItem>Download Receipt</DropdownMenuItem>
             <DropdownMenuItem>Contact via Email</DropdownMenuItem>
-            <DropdownMenuItem>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => deleteOrders([orderId])}>
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

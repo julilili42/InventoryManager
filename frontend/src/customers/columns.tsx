@@ -48,7 +48,7 @@ export const columns: ColumnDef<Customer>[] = [
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label="Select row"
           />
-          {id}
+          <span className="font-semibold">#{id}</span>
         </div>
       );
     },
@@ -56,10 +56,18 @@ export const columns: ColumnDef<Customer>[] = [
   {
     accessorKey: "first_name",
     header: "First Name",
+    cell: ({ row }) => {
+      const first_name: string = row.getValue("first_name");
+      return <span className="font-semibold">{first_name}</span>;
+    },
   },
   {
     accessorKey: "last_name",
     header: "Last Name",
+    cell: ({ row }) => {
+      const last_name: string = row.getValue("last_name");
+      return <span className="font-semibold">{last_name}</span>;
+    },
   },
   {
     accessorKey: "street",

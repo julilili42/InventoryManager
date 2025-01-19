@@ -41,9 +41,24 @@ export interface Order extends FieldValues {
   order_id: number;
   customer: Customer;
   items: OrderItem[];
+  date: string;
+  order_type: OrderType;
+  status: DeliveryStatus;
 }
 
 export interface OrderItem {
   article: Article;
   quantity: number;
+}
+
+export enum DeliveryStatus {
+  Pending = "Pending",
+  Completed = "Completed",
+  Shipped = "Shipped",
+  Delivered = "Delivered",
+}
+
+export enum OrderType {
+  Return = "Return",
+  Sale = "Sale",
 }

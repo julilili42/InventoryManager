@@ -207,6 +207,9 @@ pub fn initialize_tables(conn: &Connection) -> rusqlite::Result<()> {
             id             INTEGER PRIMARY KEY,
             order_id       INTEGER NOT NULL,
             customer_id    INTEGER NOT NULL,
+            date           TEXT NOT NULL,
+            order_type     TEXT NOT NULL,
+            status         TEXT NOT NULL, 
             FOREIGN KEY(customer_id) REFERENCES customer(customer_id)
         );
 

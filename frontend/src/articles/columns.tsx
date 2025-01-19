@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export const columns: ColumnDef<Article>[] = [
   {
@@ -48,7 +49,7 @@ export const columns: ColumnDef<Article>[] = [
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label="Select row"
           />
-          {id}
+          <span className="font-semibold">#{id}</span>
         </div>
       );
     },
@@ -56,6 +57,10 @@ export const columns: ColumnDef<Article>[] = [
   {
     accessorKey: "name",
     header: "Name",
+    cell: ({ row }) => {
+      const name: string = row.getValue("name");
+      return <span className="font-semibold">{name}</span>;
+    },
   },
   {
     accessorKey: "price",
@@ -81,6 +86,10 @@ export const columns: ColumnDef<Article>[] = [
   {
     accessorKey: "category",
     header: "Category",
+    cell: ({ row }) => {
+      const category: string = row.getValue("category");
+      return <Badge variant={"secondary"}>{category}</Badge>;
+    },
   },
   {
     id: "actions",

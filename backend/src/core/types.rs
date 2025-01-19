@@ -197,19 +197,26 @@ impl OrderItem {
     }
 }
 
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Order {
     pub order_id: i32,
     pub customer: Customer,
     pub items: Vec<OrderItem>,
+    pub date: String,
+    pub order_type: String,
+    pub status: String
 }
 
 impl Order {
-    pub fn new(order_id: i32, customer: Customer, items: Vec<OrderItem>) -> Self {
+    pub fn new(order_id: i32, customer: Customer, items: Vec<OrderItem>, date: String, order_type: String, status: String) -> Self {
         Order {
             order_id,
             customer,
             items,
+            date, 
+            order_type,
+            status
         }
     }
 }
@@ -239,7 +246,11 @@ impl Mappable for Order {
             }
         };
 
-        Ok(Order::new(order_id, fetched_customer, fetched_order_items))
+        let date = row.get(2)?;
+        let order_type = row.get(3)?;
+        let status = row.get(4)?;
+
+        Ok(Order::new(order_id, fetched_customer, fetched_order_items, date, order_type, status))
     }
 }
 
@@ -248,7 +259,7 @@ impl Insertable for Order {
         "orders"
     }
     fn columns() -> Vec<&'static str> {
-        vec!["order_id", "customer_id"]
+        vec!["order_id", "customer_id", "date", "order_type", "status"]
     }
     fn id_column() -> &'static str {
         "order_id"
@@ -259,7 +270,7 @@ impl Insertable for Order {
     }
 
     fn values(&self) -> Vec<rusqlite::types::ToSqlOutput<'_>> {
-        vec![self.order_id.into(), self.customer.customer_id.into()]
+        vec![self.order_id.into(), self.customer.customer_id.into(), self.date.clone().into(), self.order_type.clone().into(), self.status.clone().into()]
     }
 
     fn post_insert(&self, conn: &rusqlite::Connection) -> rusqlite::Result<()> {

@@ -4,6 +4,14 @@ import { Article, OrderItem } from "@/lib/interfaces";
 
 export const columns: ColumnDef<OrderItem>[] = [
   {
+    accessorKey: "article_id",
+    header: "Article ID",
+    cell: ({ row }) => {
+      const article: Article = row.getValue("article");
+      return article.article_id;
+    },
+  },
+  {
     accessorKey: "article",
     header: "Article",
     cell: ({ row }) => {
