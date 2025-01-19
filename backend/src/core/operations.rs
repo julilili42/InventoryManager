@@ -4,9 +4,9 @@ use rusqlite::{params, Connection};
 use axum::{http::StatusCode, response::Json as AxumJson};
 
 use crate::core::traits::{Insertable, Mappable};
-use std::fmt::Debug;
-use crate::core::types::{Article,OrderItem, DbPool};
+use crate::core::types::{Article, DbPool, OrderItem};
 use serde_json::json;
+use std::fmt::Debug;
 
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
@@ -92,7 +92,6 @@ pub fn insert_record<T: Mappable + Insertable>(
 
     let values = item.values();
 
-
     conn.execute(&query, rusqlite::params_from_iter(values))?;
 
     item.post_insert(conn)?;
@@ -143,9 +142,7 @@ pub fn fetch_all_records<T: Insertable + Mappable + Debug>(
     for item in iter {
         item_list.push(item?);
     }
-
-    print!("{:?}", item_list);
-
+    
     Ok(item_list)
 }
 
@@ -155,7 +152,7 @@ pub fn fetch_order_items(
 ) -> rusqlite::Result<Vec<OrderItem>> {
     let mut stmt = conn.prepare(
         "
-        SELECT a.article_id, a.price, a.manufacturer, a.stock, a.category, oa.quantity
+        SELECT a.article_id, a.name, a.price, a.manufacturer, a.stock, a.category, oa.quantity
         FROM article a
         JOIN order_article oa ON a.article_id = oa.article_id
         WHERE oa.order_id = ?
@@ -163,14 +160,15 @@ pub fn fetch_order_items(
     )?;
 
     let article_iter = stmt.query_map([order_id], |row| {
-        let article = Article {
-            article_id: row.get(0)?,
-            price: row.get(1)?,
-            manufacturer: row.get(2)?,
-            stock: row.get(3)?,
-            category: row.get(4)?,
-        };
-        let quantity: i32 = row.get(5)?;
+        let article = Article::new(
+            row.get(0)?,
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+            row.get(5)?,
+        );
+        let quantity: i32 = row.get(6)?;
         let order_item = OrderItem::new(article, quantity);
         Ok(order_item)
     })?;
@@ -185,6 +183,7 @@ pub fn initialize_tables(conn: &Connection) -> rusqlite::Result<()> {
         CREATE TABLE IF NOT EXISTS article (
             id             INTEGER PRIMARY KEY,
             article_id     INTEGER NOT NULL,
+            name           TEXT NOT NULL,
             price          REAL NOT NULL,
             manufacturer   TEXT NOT NULL,
             stock          INTEGER NOT NULL, 

@@ -12,10 +12,15 @@ export interface Request {
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  showFilter?: boolean;
+  showSelect?: boolean;
+  showDelete?: boolean;
+  showPagination?: boolean;
 }
 
 export interface Article extends FieldValues {
   article_id: number;
+  name: string;
   price: number;
   stock: number;
   manufacturer: string;

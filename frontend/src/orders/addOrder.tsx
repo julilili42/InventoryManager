@@ -1,8 +1,10 @@
 // addOrder.tsx
 import { Order } from "@/lib/interfaces";
 import { FormCard } from "@/components/ui/formCard";
-import { addOrder, searchArticle, searchCustomer } from "@/lib/operations";
 import { useStore } from "@/lib/store";
+import { searchArticle } from "@/lib/services/articleService";
+import { searchCustomer } from "@/lib/services/customerServices";
+import { addOrder } from "@/lib/services/orderServices";
 
 export const AddOrder = () => {
   const { orderData, setOrder, fetchOrders } = useStore();

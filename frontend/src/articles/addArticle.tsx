@@ -1,6 +1,8 @@
 // addArticle.tsx
 import { Article } from "@/lib/interfaces";
-import { addArticle, importCSV } from "@/lib/operations";
+import { addArticle } from "@/lib/services/articleService";
+import { importCSV } from "@/lib/services/importExportService";
+
 import { useStore } from "@/lib/store";
 import { FormCard } from "@/components/ui/formCard";
 
@@ -13,6 +15,13 @@ export const AddArticle = () => {
       name: "article_id",
       placeholder: "Article ID",
       valueAsNumber: true,
+      required: true,
+    },
+    {
+      label: "Name",
+      name: "name",
+      placeholder: "Name",
+      valueAsNumber: false,
       required: true,
     },
     {

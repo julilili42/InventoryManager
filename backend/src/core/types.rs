@@ -9,10 +9,31 @@ use std::sync::Arc;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Article {
     pub article_id: i32,
+    pub name: String,
     pub price: f64,
     pub manufacturer: String,
     pub stock: i32,
     pub category: Option<String>,
+}
+
+impl Article {
+    pub fn new(
+        article_id: i32,
+        name: String,
+        price: f64,
+        manufacturer: String,
+        stock: i32,
+        category: Option<String>,
+    ) -> Article {
+        Article {
+            article_id,
+            name,
+            price,
+            manufacturer,
+            stock,
+            category,
+        }
+    }
 }
 
 impl Mappable for Article {
@@ -20,13 +41,14 @@ impl Mappable for Article {
         row: &rusqlite::Row,
         _conn: Option<&rusqlite::Connection>,
     ) -> rusqlite::Result<Self> {
-        Ok(Article {
-            article_id: row.get(0)?,
-            price: row.get(1)?,
-            manufacturer: row.get(2)?,
-            stock: row.get(3)?,
-            category: row.get(4)?,
-        })
+        Ok(Article::new(
+            row.get(0)?,
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+            row.get(5)?,
+        ))
     }
 }
 
@@ -44,7 +66,7 @@ impl Insertable for Article {
         "article"
     }
     fn columns() -> Vec<&'static str> {
-        vec!["article_id", "price", "manufacturer", "stock", "category"]
+        vec!["article_id","name", "price", "manufacturer", "stock", "category"]
     }
     fn id_column() -> &'static str {
         "article_id"
@@ -56,6 +78,7 @@ impl Insertable for Article {
     fn values(&self) -> Vec<rusqlite::types::ToSqlOutput<'_>> {
         vec![
             self.article_id.into(),
+            self.name.clone().into(),
             self.price.into(),
             self.manufacturer.clone().into(),
             self.stock.into(),
@@ -78,21 +101,42 @@ pub struct Customer {
     pub email: String,
 }
 
- 
+impl Customer {
+    pub fn new(
+        customer_id: i32,
+        first_name: String,
+        last_name: String,
+        street: String,
+        location: String,
+        zip_code: i32,
+        email: String,
+    ) -> Customer {
+        Customer {
+            customer_id,
+            first_name,
+            last_name,
+            street,
+            location,
+            zip_code,
+            email,
+        }
+    }
+}
+
 impl Mappable for Customer {
     fn from_row(
         row: &rusqlite::Row,
         _conn: Option<&rusqlite::Connection>,
     ) -> rusqlite::Result<Self> {
-        Ok(Customer {
-            customer_id: row.get(0)?,
-            first_name: row.get(1)?,
-            last_name: row.get(2)?,
-            street: row.get(3)?,
-            location: row.get(4)?,
-            zip_code: row.get(5)?,
-            email: row.get(6)?,
-        })
+        Ok(Customer::new(
+            row.get(0)?,
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+            row.get(5)?,
+            row.get(6)?,
+        ))
     }
 }
 
@@ -141,7 +185,6 @@ impl Searchable for Customer {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OrderItem {
     article: Article,
@@ -150,13 +193,9 @@ pub struct OrderItem {
 
 impl OrderItem {
     pub fn new(article: Article, quantity: i32) -> Self {
-        OrderItem {
-            article, 
-            quantity
-        }
+        OrderItem { article, quantity }
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Order {
@@ -168,9 +207,9 @@ pub struct Order {
 impl Order {
     pub fn new(order_id: i32, customer: Customer, items: Vec<OrderItem>) -> Self {
         Order {
-            order_id, 
+            order_id,
             customer,
-            items
+            items,
         }
     }
 }
@@ -232,19 +271,22 @@ impl Insertable for Order {
         let mut stmt = conn.prepare(query)?;
 
         for order_item in &self.items {
-            stmt.execute(params![self.order_id, order_item.article.article_id, order_item.quantity])?;
+            stmt.execute(params![
+                self.order_id,
+                order_item.article.article_id,
+                order_item.quantity
+            ])?;
         }
 
         Ok(())
     }
 
     fn post_delete(id_value: Option<&i32>, conn: &rusqlite::Connection) -> rusqlite::Result<()> {
-        
         match id_value {
             Some(id_value) => {
                 let query = "DELETE FROM order_article WHERE order_id = ?1";
 
-                conn.execute(query, params![id_value])?;   
+                conn.execute(query, params![id_value])?;
             }
             None => {
                 let query = "DELETE FROM order_article";
@@ -253,10 +295,8 @@ impl Insertable for Order {
             }
         }
 
-        
         Ok(())
     }
-
 }
 
 impl Searchable for Order {

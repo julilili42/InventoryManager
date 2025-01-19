@@ -26,7 +26,14 @@ export function TableOrder() {
   return (
     <div className="container py-10 mx-auto">
       {orderData ? (
-        <OrderTable columns={columns} data={orderData} />
+        <OrderTable
+          columns={columns}
+          data={orderData}
+          showDelete={true}
+          showFilter={true}
+          showPagination={true}
+          showSelect={true}
+        />
       ) : (
         <div>Keine Daten verfügbar</div>
       )}

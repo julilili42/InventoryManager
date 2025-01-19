@@ -1,7 +1,7 @@
 //routes.rs
 use crate::api::endpoint::{
     handle_create_record, handle_delete_record, handle_fetch_records, handle_generate_pdf,
-    handle_import_csv, handle_update_record, handle_search
+    handle_import_csv, handle_search, handle_update_record,
 };
 use crate::core::types::{Article, Customer, Order};
 use axum::{
@@ -9,12 +9,9 @@ use axum::{
     Router,
 };
 
-
 pub fn operation_routes() -> Router {
-    Router::new()
-        .route("/operations/pdf", post(handle_generate_pdf))
-    }   
-
+    Router::new().route("/operations/pdf", post(handle_generate_pdf))
+}
 
 pub fn article_routes() -> Router {
     Router::new()
@@ -53,7 +50,8 @@ pub fn order_routes() -> Router {
         .route("/orders/delete", delete(handle_delete_record::<Order>))
         .route("/orders/delete/:id", delete(handle_delete_record::<Order>))
         .route("/orders/update", put(handle_update_record::<Order>))
-    }
+        .route("/orders/search/:id", get(handle_search::<Order>))
+}
 
 pub fn get_routes() -> Router {
     Router::new()

@@ -1,7 +1,9 @@
 // store.ts
 import { create } from "zustand";
 import { Article, Customer, Order } from "./interfaces";
-import { get } from "./api";
+import { fetchArticles } from "./services/articleService";
+import { fetchCustomers } from "./services/customerServices";
+import { fetchOrders } from "./services/orderServices";
 
 export interface GlobalState {
   // global states
@@ -47,28 +49,28 @@ export const useStore = create<GlobalState>((set) => {
 
     fetchArticles: async () => {
       try {
-        const json = await get({ route: "/articles" });
-        updateIfChanged<Article>("articleData", json);
+        const articles = await fetchArticles();
+        updateIfChanged("articleData", articles);
       } catch (error) {
-        console.error("Fehler beim Abrufen der Daten:", error);
+        console.error("Failed to update article data in store.");
       }
     },
 
     fetchCustomers: async () => {
       try {
-        const json = await get({ route: "/customers" });
-        updateIfChanged<Customer>("customerData", json);
+        const customers = await fetchCustomers();
+        updateIfChanged("customerData", customers);
       } catch (error) {
-        console.error("Fehler beim Abrufen der Daten:", error);
+        console.error("Failed to update customer data in store.");
       }
     },
 
     fetchOrders: async () => {
       try {
-        const json = await get({ route: "/orders" });
-        updateIfChanged<Order>("orderData", json);
+        const orders = await fetchOrders();
+        updateIfChanged("orderData", orders);
       } catch (error) {
-        console.error("Fehler beim Abrufen der Daten:", error);
+        console.error("Error while fetching orders:", error);
       }
     },
   };

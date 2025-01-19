@@ -8,8 +8,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
@@ -56,6 +54,10 @@ export const columns: ColumnDef<Article>[] = [
     },
   },
   {
+    accessorKey: "name",
+    header: "Name",
+  },
+  {
     accessorKey: "price",
     header: "Price",
     cell: ({ row }) => {
@@ -83,7 +85,7 @@ export const columns: ColumnDef<Article>[] = [
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => {
+    cell: () => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

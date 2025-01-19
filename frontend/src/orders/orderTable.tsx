@@ -31,13 +31,17 @@ import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { deleteOrders } from "@/lib/operations";
 import { useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
+import { deleteOrders } from "@/lib/services/orderServices";
 
 export function OrderTable<TData, TValue>({
   columns,
   data,
+  showFilter = false,
+  showSelect = false,
+  showDelete = false,
+  showPagination = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -92,53 +96,66 @@ export function OrderTable<TData, TValue>({
   return (
     <div>
       <div className="flex items-center justify-between py-4">
-        <Input
-          placeholder="Filter order id.."
-          value={
-            (table.getColumn("order_id")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event: any) =>
-            table.getColumn("order_id")?.setFilterValue(event.target.value)
-          }
-          className="w-fit"
-        />
+        {/* Filter */}
+        {showFilter && (
+          <Input
+            placeholder="Filter order id.."
+            value={
+              (table.getColumn("order_id")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event: any) =>
+              table.getColumn("order_id")?.setFilterValue(event.target.value)
+            }
+            className="w-fit"
+          />
+        )}
+
         <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
-          <Button
-            variant={"destructive_muted"}
-            onClick={() => deleteRow(selectedOrders ?? [])}
-          >
-            <Trash2 /> Delete
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                <List /> Selected Columns
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  const column_name =
-                    column.id === "order_id" ? "Order ID" : column.id;
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column_name}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value: any) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column_name}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Deletion */}
+          {showDelete && (
+            <Button
+              variant={"destructive_muted"}
+              onClick={() => deleteRow(selectedOrders ?? [])}
+            >
+              <Trash2 /> Delete
+            </Button>
+          )}
+
+          {/* Select */}
+          {showSelect && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="ml-auto">
+                  <List /> Selected Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    const column_name =
+                      column.id === "order_id" ? "Order ID" : column.id;
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column_name}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value: any) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column_name}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
+
+      {/* Data Table */}
       <div className="border rounded-md">
         <Table>
           <TableHeader>
@@ -189,30 +206,34 @@ export function OrderTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between py-4">
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <span>Previous</span>
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <span>Next</span>
-          </Button>
+
+      {/* Pagination */}
+      {showPagination && (
+        <div className="flex items-center justify-between py-4">
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <span>Previous</span>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <span>Next</span>
+            </Button>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
         </div>
-        <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-      </div>
+      )}
     </div>
   );
 }

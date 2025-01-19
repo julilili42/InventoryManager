@@ -1,14 +1,15 @@
 // orders.tsx
 import { Button } from "@/components/ui/button";
-import { pdf_gen, pdfRequest } from "@/lib/operations";
 import { AddOrder } from "./addOrder";
 import { OrderLog } from "./orderLog";
 import { TableOrder } from "./page";
+import { pdf_gen, pdfRequest } from "@/lib/services/importExportService";
 
 export const Orders = () => {
   const test_article: pdfRequest = {
     article: {
       article_id: 1,
+      name: "test",
       price: 1,
       manufacturer: "test",
       stock: 1,

@@ -29,7 +29,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 border-b backdrop-blur-lg">
       <div className="flex items-center justify-between h-16 gap-8 px-10 md:justify-start">
         {/* Markenname */}
-        <div className="text-xl font-bold">React Inventory</div>
+        <div className="text-2xl font-semibold">React Inventory</div>
 
         {/* Desktop Navigation */}
         <nav className="hidden gap-6 text-muted-foreground md:flex">

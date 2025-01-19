@@ -8,7 +8,10 @@ use axum::{
 use csv::ReaderBuilder;
 use std::{fmt::Debug, io::Cursor};
 
-use crate::core::{operations::find_record_by_id, types::{Article, DbPool, PdfRequest}};
+use crate::core::{
+    operations::find_record_by_id,
+    types::{Article, DbPool, PdfRequest},
+};
 use crate::core::{
     operations::{
         delete_record_by_id, establish_connection, fetch_all_records, insert_record, update_record,
@@ -38,8 +41,8 @@ pub async fn handle_search<T: Mappable + Insertable>(
         Ok(item) => Ok(AxumJson(item)),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            AxumJson(json!({"error": format!("Failed to search id {}: {}", search_id, e)}))
-        ))
+            AxumJson(json!({"error": format!("Failed to search id {}: {}", search_id, e)})),
+        )),
     }
 }
 
@@ -48,7 +51,6 @@ pub async fn handle_fetch_records<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
 ) -> Result<AxumJson<Vec<T>>, (StatusCode, AxumJson<serde_json::Value>)> {
     let conn = establish_connection(&pool)?;
-
 
     match fetch_all_records::<T>(&conn) {
         Ok(item_list) => Ok(AxumJson(item_list)),

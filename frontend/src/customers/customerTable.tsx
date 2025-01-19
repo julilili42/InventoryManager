@@ -31,9 +31,9 @@ import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { deleteCustomers } from "@/lib/operations";
 import { useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
+import { deleteCustomers } from "@/lib/services/customerServices";
 
 export function CustomerTable<TData, TValue>({
   columns,

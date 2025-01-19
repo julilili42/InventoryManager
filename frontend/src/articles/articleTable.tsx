@@ -31,9 +31,9 @@ import { Article, DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { deleteArticles, updateArticle } from "@/lib/operations";
 import { useStore } from "@/lib/store";
-import { Trash2, List, Pencil } from "lucide-react";
+import { Trash2, List } from "lucide-react";
+import { deleteArticles, updateArticle } from "@/lib/services/articleService";
 
 export function ArticleTable<TData, TValue>({
   columns,

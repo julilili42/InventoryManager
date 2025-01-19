@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export const columns: ColumnDef<Order>[] = [
   {
@@ -156,6 +157,9 @@ export const columns: ColumnDef<Order>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
+      const navigate = useNavigate();
+      const orderId = row.getValue("order_id");
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -165,7 +169,9 @@ export const columns: ColumnDef<Order>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>View Order</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate(`/orders/${orderId}`)}>
+              View Order
+            </DropdownMenuItem>
             <DropdownMenuItem>Download Receipt</DropdownMenuItem>
             <DropdownMenuItem>Contact via Email</DropdownMenuItem>
             <DropdownMenuItem>Delete</DropdownMenuItem>

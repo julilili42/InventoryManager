@@ -2,7 +2,7 @@
 import { Customer } from "@/lib/interfaces";
 import { FormCard } from "@/components/ui/formCard";
 import { useStore } from "@/lib/store";
-import { addCustomer } from "@/lib/operations";
+import { addCustomer } from "@/lib/services/customerServices";
 
 export const AddCustomer = () => {
   const { customerData, setCustomer, fetchCustomers } = useStore();
