@@ -135,17 +135,9 @@ export const columns: ColumnDef<Order>[] = [
       const orderType = row.getValue("order_type");
       switch (orderType) {
         case OrderType.Sale:
-          return (
-            <Badge variant={"secondary"} className="rounded-xls">
-              Sale
-            </Badge>
-          );
+          return <Badge className="bg-gray-500 rounded-xl ">Sale</Badge>;
         case OrderType.Return:
-          return (
-            <Badge variant={"secondary"} className="rounded-xl">
-              Return
-            </Badge>
-          );
+          return <Badge className="bg-red-500 rounded-xl">Return</Badge>;
       }
     },
   },

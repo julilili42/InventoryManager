@@ -31,7 +31,7 @@ import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { useStore } from "@/lib/store";
+import { StateKeys, useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
 import { deleteOrders } from "@/lib/services/orderServices";
 
@@ -50,7 +50,7 @@ export function OrderTable<TData, TValue>({
   const [selectedOrders, setSelectedOrders] = useState<number[] | null>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-  const { orderData, setOrder } = useStore();
+  const { orderData, setState } = useStore();
 
   const table = useReactTable({
     data,
@@ -89,13 +89,13 @@ export function OrderTable<TData, TValue>({
     const new_data = orderData
       ? orderData.filter((order) => !delete_ids.includes(order.order_id))
       : null;
-    setOrder(new_data);
+    setState(StateKeys.OrderData, new_data);
     setRowSelection({});
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between py-4">
+      <div className="flex items-center justify-between ">
         {/* Filter */}
         {showFilter && (
           <Input
@@ -156,7 +156,7 @@ export function OrderTable<TData, TValue>({
       </div>
 
       {/* Data Table */}
-      <div className="border rounded-md">
+      <div className="mt-4 border rounded-md">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

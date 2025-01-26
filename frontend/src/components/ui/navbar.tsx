@@ -19,9 +19,8 @@ import { NavLink } from "react-router";
 const navItems = [
   { name: "Home", href: "/" },
   { name: "Articles", href: "/articles" },
-  { name: "Orders", href: "/orders" },
   { name: "Customers", href: "/customers" },
-  { name: "Contact", href: "/contact" },
+  { name: "Orders", href: "/orders" },
 ];
 
 export function Navbar() {

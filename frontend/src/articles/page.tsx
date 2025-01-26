@@ -26,7 +26,14 @@ export function TableArticle() {
   return (
     <div className="container py-10 mx-auto">
       {articleData ? (
-        <ArticleTable columns={columns} data={articleData} />
+        <ArticleTable
+          columns={columns}
+          data={articleData}
+          showDelete={true}
+          showFilter={true}
+          showPagination={true}
+          showSelect={true}
+        />
       ) : (
         <div>Keine Daten verfügbar</div>
       )}

@@ -1,22 +1,27 @@
 // store.ts
 import { create } from "zustand";
-import { Article, Customer, Order } from "./interfaces";
+import { Article, ArticleSelection, Customer, Order } from "./interfaces";
 import { fetchArticles } from "./services/articleService";
 import { fetchCustomers } from "./services/customerServices";
 import { fetchOrders } from "./services/orderServices";
 
+export enum StateKeys {
+  ArticleData = "articleData",
+  CustomerData = "customerData",
+  OrderData = "orderData",
+}
+
 export interface GlobalState {
   // global states
-  selectedArticle: Article | null;
+  selectedArticle: ArticleSelection | null;
   articleData: Article[] | null;
   customerData: Customer[] | null;
   orderData: Order[] | null;
 
   // global state setters
-  setSelectedArticle: (id: Article | null) => void;
-  setArticle: (data: Article[] | null) => void;
-  setCustomer: (data: Customer[] | null) => void;
-  setOrder: (data: Order[] | null) => void;
+  setSelectedArticle: (articleSelection: ArticleSelection | null) => void;
+
+  setState: <T>(key: StateKeys, data: T) => void;
 
   fetchArticles: () => Promise<void>;
   fetchCustomers: () => Promise<void>;
@@ -41,11 +46,10 @@ export const useStore = create<GlobalState>((set) => {
     orderData: null,
 
     // global state setters
-    setSelectedArticle: (article: Article | null) =>
-      set({ selectedArticle: article }),
-    setArticle: (articleData: Article[] | null) => set({ articleData }),
-    setCustomer: (customerData: Customer[] | null) => set({ customerData }),
-    setOrder: (orderData: Order[] | null) => set({ orderData }),
+    setSelectedArticle: (articleSelection: ArticleSelection | null) =>
+      set({ selectedArticle: articleSelection }),
+
+    setState: (key, data) => set({ [key]: data }),
 
     fetchArticles: async () => {
       try {

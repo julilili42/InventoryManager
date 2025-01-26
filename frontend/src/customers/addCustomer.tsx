@@ -1,11 +1,11 @@
 // addCustomer.tsx
 import { Customer } from "@/lib/interfaces";
 import { FormCard } from "@/components/ui/formCard";
-import { useStore } from "@/lib/store";
+import { StateKeys, useStore } from "@/lib/store";
 import { addCustomer } from "@/lib/services/customerServices";
 
 export const AddCustomer = () => {
-  const { customerData, setCustomer, fetchCustomers } = useStore();
+  const { customerData, setState, fetchCustomers } = useStore();
 
   const fields = [
     {
@@ -59,7 +59,7 @@ export const AddCustomer = () => {
       console.log(newData);
       await addCustomer(newData);
       await fetchCustomers();
-      setCustomer([newData, ...(customerData ?? [])]);
+      setState(StateKeys.CustomerData, [newData, ...(customerData ?? [])]);
       console.log("Customer added successfully");
     } catch (error) {
       console.error("Error adding customer:", error);

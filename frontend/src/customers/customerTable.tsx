@@ -31,7 +31,7 @@ import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { useStore } from "@/lib/store";
+import { StateKeys, useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
 import { deleteCustomers } from "@/lib/services/customerServices";
 
@@ -48,7 +48,7 @@ export function CustomerTable<TData, TValue>({
   );
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-  const { customerData, setCustomer } = useStore();
+  const { customerData, setState } = useStore();
 
   const table = useReactTable({
     data,
@@ -89,12 +89,12 @@ export function CustomerTable<TData, TValue>({
           (customer) => !delete_ids.includes(customer.customer_id)
         )
       : null;
-    setCustomer(new_data);
+    setState(StateKeys.CustomerData, new_data);
     setRowSelection({});
   };
   return (
     <div>
-      <div className="flex items-center justify-between py-4">
+      <div className="flex items-center justify-between">
         <Input
           placeholder="Filter customer id.."
           value={
@@ -142,7 +142,7 @@ export function CustomerTable<TData, TValue>({
           </DropdownMenu>
         </div>
       </div>
-      <div className="border rounded-md">
+      <div className="mt-4 border rounded-md">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

@@ -2,6 +2,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { AxiosRequestConfig } from "axios";
 import { FieldValues } from "react-hook-form";
+
 export interface Request {
   route: string;
   body?: any;
@@ -12,10 +13,13 @@ export interface Request {
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  pageSize?: number;
   showFilter?: boolean;
   showSelect?: boolean;
   showDelete?: boolean;
   showPagination?: boolean;
+  onSelectionChange?: (selectedItems: ArticleSelection) => void;
+  onQuantityChange?: (quantities: number[]) => void;
 }
 
 export interface Article extends FieldValues {
@@ -25,6 +29,11 @@ export interface Article extends FieldValues {
   stock: number;
   manufacturer: string;
   category: string;
+  quantity?: number;
+}
+
+export interface ArticleSelection {
+  selectedArticles: { article?: Article | null; quantity?: number | null }[];
 }
 
 export interface Customer extends FieldValues {

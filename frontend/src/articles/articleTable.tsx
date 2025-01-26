@@ -27,26 +27,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Article, DataTableProps } from "@/lib/interfaces";
+import { DataTableProps, ArticleSelection } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { useStore } from "@/lib/store";
+import { StateKeys, useStore } from "@/lib/store";
 import { Trash2, List } from "lucide-react";
-import { deleteArticles, updateArticle } from "@/lib/services/articleService";
+import { deleteArticles } from "@/lib/services/articleService";
 
-export function ArticleTable<TData, TValue>({
+export function ArticleTable<TData extends { quantity?: number }, TValue>({
   columns,
   data,
+  pageSize = 15,
+  showFilter = false,
+  showSelect = false,
+  showDelete = false,
+  showPagination = false,
+  onSelectionChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
 
-  const [selectedArticles, setSelectedArticles] = useState<number[] | null>([]);
+  const [selectedArticles, setSelectedArticles] =
+    useState<ArticleSelection | null>(null);
+
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-  const { articleData, setArticle } = useStore();
+  const { articleData, setState } = useStore();
 
   const table = useReactTable({
     data,
@@ -67,17 +75,28 @@ export function ArticleTable<TData, TValue>({
     },
     initialState: {
       pagination: {
-        pageSize: 15,
+        pageSize,
       },
     },
   });
 
   useEffect(() => {
-    const selectedArticles = table
-      .getSelectedRowModel()
-      .flatRows.map((row) => row.getValue("article_id") as number);
+    const selectedRows = table.getSelectedRowModel().flatRows.map((row) => {
+      const original = row.original;
+      const article_id = row.getValue("article_id") as number;
 
-    setSelectedArticles(selectedArticles);
+      const selectedArticle = articleData
+        ? articleData.find((article) => article.article_id === article_id)
+        : null;
+
+      return {
+        article: selectedArticle,
+        quantity: original.quantity ?? 0,
+      };
+    });
+
+    setSelectedArticles({ selectedArticles: selectedRows });
+    onSelectionChange?.({ selectedArticles: selectedRows });
   }, [rowSelection]);
 
   const deleteRow = async (delete_ids: number[]) => {
@@ -87,72 +106,85 @@ export function ArticleTable<TData, TValue>({
           (article) => !delete_ids.includes(article.article_id)
         )
       : null;
-    setArticle(updatedData);
-    setRowSelection({});
-  };
-
-  const updateRow = async (article: Article) => {
-    await updateArticle(article);
-    const updatedData = articleData
-      ? articleData.map((a: Article) =>
-          a.article_id === article.article_id ? article : a
-        )
-      : null;
-    setArticle(updatedData);
+    setState(StateKeys.ArticleData, updatedData);
     setRowSelection({});
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between py-4">
-        <Input
-          placeholder="Filter article id.."
-          value={
-            (table.getColumn("article_id")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event: any) =>
-            table.getColumn("article_id")?.setFilterValue(event.target.value)
-          }
-          className="w-fit"
-        />
+      {(showFilter || showDelete || showSelect) && (
+        <div className="flex items-center justify-between mb-4">
+          {/* Filter */}
+          {showFilter && (
+            <Input
+              placeholder="Filter article id.."
+              value={
+                (table.getColumn("article_id")?.getFilterValue() as string) ??
+                ""
+              }
+              onChange={(event: any) =>
+                table
+                  .getColumn("article_id")
+                  ?.setFilterValue(event.target.value)
+              }
+              className="w-fit"
+            />
+          )}
 
-        <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
-          <Button
-            variant={"destructive_muted"}
-            onClick={() => deleteRow(selectedArticles ?? [])}
-          >
-            <Trash2 /> Delete
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                <List /> Selected Columns
+          <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
+            {/* Deletion */}
+            {showDelete && (
+              <Button
+                variant={"destructive_muted"}
+                onClick={() => {
+                  const delete_ids =
+                    selectedArticles?.selectedArticles.flatMap((item) =>
+                      item.article ? [item.article.article_id] : []
+                    ) ?? [];
+
+                  deleteRow(delete_ids);
+                }}
+              >
+                <Trash2 /> Delete
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  const column_name =
-                    column.id === "article_id" ? "Article ID" : column.id;
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column_name}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value: any) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column_name}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+
+            {/* Select */}
+            {showSelect && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto">
+                    <List /> Selected Columns
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      const column_name =
+                        column.id === "article_id" ? "Article ID" : column.id;
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column_name}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value: any) =>
+                            column.toggleVisibility(!!value)
+                          }
+                        >
+                          {column_name}
+                        </DropdownMenuCheckboxItem>
+                      );
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Data Table */}
       <div className="border rounded-md">
         <Table>
           <TableHeader>
@@ -203,30 +235,34 @@ export function ArticleTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between py-4">
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <span>Previous</span>
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <span>Next</span>
-          </Button>
+
+      {/* Pagination */}
+      {showPagination && (
+        <div className="flex items-center justify-between py-4">
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <span>Previous</span>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <span>Next</span>
+            </Button>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
         </div>
-        <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-      </div>
+      )}
     </div>
   );
 }

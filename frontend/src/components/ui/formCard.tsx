@@ -43,7 +43,7 @@ export function FormCard<TFormValues extends FieldValues>({
   };
 
   return (
-    <Card className="w-fit h-fit mt-14">
+    <Card className="mt-10 w-fit h-fit">
       <CardHeader>
         <CardTitle className="text-2xl text-center">{title}</CardTitle>
       </CardHeader>
