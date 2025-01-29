@@ -6,7 +6,7 @@ import { Article } from "@/lib/interfaces";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const columns: ColumnDef<Article>[] = [
   {
@@ -95,6 +95,12 @@ export const columns: ColumnDef<Article>[] = [
       const [quantity, setQuantity] = useState<number>(
         row.getValue("quantity") ?? 0
       );
+
+      /* useEffect(() => {
+        console.log(
+          `Quantity changed to ${original.quantity} in Row ${row.id}`
+        );
+      }, [quantity]); */
 
       const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = parseInt(e.target.value || "0", 10);

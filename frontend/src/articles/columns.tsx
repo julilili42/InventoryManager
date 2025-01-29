@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router";
 
 export const columns: ColumnDef<Article>[] = [
   {
@@ -94,7 +95,9 @@ export const columns: ColumnDef<Article>[] = [
   {
     id: "actions",
     enableHiding: false,
-    cell: () => {
+    cell: ({ row }) => {
+      const navigate = useNavigate();
+      const articleId: number = row.getValue("article_id");
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -104,7 +107,11 @@ export const columns: ColumnDef<Article>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>View article</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => navigate(`/articles/${articleId}`)}
+            >
+              View article
+            </DropdownMenuItem>
             <DropdownMenuItem>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
