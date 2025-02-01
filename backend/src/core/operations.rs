@@ -142,7 +142,7 @@ pub fn fetch_all_records<T: Insertable + Mappable + Debug>(
     for item in iter {
         item_list.push(item?);
     }
-    
+
     Ok(item_list)
 }
 

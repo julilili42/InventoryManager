@@ -5,6 +5,7 @@ use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use strum_macros::{Display, EnumString};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Article {
@@ -66,7 +67,14 @@ impl Insertable for Article {
         "article"
     }
     fn columns() -> Vec<&'static str> {
-        vec!["article_id","name", "price", "manufacturer", "stock", "category"]
+        vec![
+            "article_id",
+            "name",
+            "price",
+            "manufacturer",
+            "stock",
+            "category",
+        ]
     }
     fn id_column() -> &'static str {
         "article_id"
@@ -197,6 +205,41 @@ impl OrderItem {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Display, EnumString)]
+pub enum OrderType {
+    Return,
+    Sale,
+}
+
+impl OrderType {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "Return" => Some(OrderType::Return),
+            "Sale" => Some(OrderType::Sale),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Display, EnumString)]
+pub enum OrderStatus {
+    Pending,
+    Completed,
+    Shipped,
+    Delivered,
+}
+
+impl OrderStatus {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "Pending" => Some(OrderStatus::Pending),
+            "Completed" => Some(OrderStatus::Completed),
+            "Shipped" => Some(OrderStatus::Shipped),
+            "Delivered" => Some(OrderStatus::Delivered),
+            _ => None,
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Order {
@@ -204,19 +247,26 @@ pub struct Order {
     pub customer: Customer,
     pub items: Vec<OrderItem>,
     pub date: String,
-    pub order_type: String,
-    pub status: String
+    pub order_type: OrderType,
+    pub status: OrderStatus,
 }
 
 impl Order {
-    pub fn new(order_id: i32, customer: Customer, items: Vec<OrderItem>, date: String, order_type: String, status: String) -> Self {
+    pub fn new(
+        order_id: i32,
+        customer: Customer,
+        items: Vec<OrderItem>,
+        date: String,
+        order_type: OrderType,
+        status: OrderStatus,
+    ) -> Self {
         Order {
             order_id,
             customer,
             items,
-            date, 
+            date,
             order_type,
-            status
+            status,
         }
     }
 }
@@ -247,10 +297,22 @@ impl Mappable for Order {
         };
 
         let date = row.get(2)?;
-        let order_type = row.get(3)?;
-        let status = row.get(4)?;
+        let order_type: String = row.get(3)?;
+        let status: String = row.get(4)?;
 
-        Ok(Order::new(order_id, fetched_customer, fetched_order_items, date, order_type, status))
+        let order_type = OrderType::from_str(&order_type)
+            .ok_or_else(|| rusqlite::Error::InvalidParameterName("Invalid order_type".into()))?;
+        let status = OrderStatus::from_str(&status)
+            .ok_or_else(|| rusqlite::Error::InvalidParameterName("Invalid status".into()))?;
+
+        Ok(Order::new(
+            order_id,
+            fetched_customer,
+            fetched_order_items,
+            date,
+            order_type,
+            status,
+        ))
     }
 }
 
@@ -270,7 +332,13 @@ impl Insertable for Order {
     }
 
     fn values(&self) -> Vec<rusqlite::types::ToSqlOutput<'_>> {
-        vec![self.order_id.into(), self.customer.customer_id.into(), self.date.clone().into(), self.order_type.clone().into(), self.status.clone().into()]
+        vec![
+            self.order_id.into(),
+            self.customer.customer_id.into(),
+            self.date.clone().into(),
+            self.order_type.to_string().into(),
+            self.status.to_string().into(),
+        ]
     }
 
     fn post_insert(&self, conn: &rusqlite::Connection) -> rusqlite::Result<()> {

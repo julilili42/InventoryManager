@@ -6,10 +6,11 @@ use axum::{
 };
 
 use csv::ReaderBuilder;
-use std::{fmt::Debug, io::Cursor};
+use std::{collections::HashMap, fmt::Debug, io::Cursor};
 
 use crate::core::{
     operations::find_record_by_id,
+    statistics::article_order_count,
     types::{Article, DbPool, PdfRequest},
 };
 use crate::core::{
@@ -30,6 +31,7 @@ pub async fn handle_generate_pdf(
     Ok(pdf_response)
 }
 
+// GET <T>/search/:id
 pub async fn handle_search<T: Mappable + Insertable>(
     Extension(pool): Extension<DbPool>,
     id: Path<i32>,
@@ -121,6 +123,21 @@ pub async fn handle_update_record<T: Mappable + Insertable + Debug>(
             AxumJson(
                 json!({ "error": format!("Failed to update record {}: {}", updated_item.id_value(), e) }),
             ),
+        )),
+    }
+}
+
+// GET /operations/statistics
+pub async fn handle_statistics(
+    Extension(pool): Extension<DbPool>,
+) -> Result<AxumJson<HashMap<i32, i32>>, (StatusCode, AxumJson<serde_json::Value>)> {
+    let conn = establish_connection(&pool)?;
+
+    match article_order_count(&conn) {
+        Ok(collected_count) => Ok(AxumJson(collected_count)),
+        Err(e) => Err((
+            StatusCode::BAD_REQUEST,
+            AxumJson(json!({ "error": format!("Failed to retrieve statistics: {}", e) })),
         )),
     }
 }

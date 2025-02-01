@@ -3,14 +3,19 @@ use crate::api::endpoint::{
     handle_create_record, handle_delete_record, handle_fetch_records, handle_generate_pdf,
     handle_import_csv, handle_search, handle_update_record,
 };
+
 use crate::core::types::{Article, Customer, Order};
 use axum::{
     routing::{delete, get, post, put},
     Router,
 };
 
+use super::endpoint::handle_statistics;
+
 pub fn operation_routes() -> Router {
-    Router::new().route("/operations/pdf", post(handle_generate_pdf))
+    Router::new()
+        .route("/operations/pdf", post(handle_generate_pdf))
+        .route("/operations/statistics", get(handle_statistics))
 }
 
 pub fn article_routes() -> Router {
