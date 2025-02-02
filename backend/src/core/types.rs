@@ -4,6 +4,7 @@ use crate::core::traits::{Insertable, Mappable, Searchable};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use strum_macros::{Display, EnumString};
 
@@ -384,6 +385,42 @@ impl Searchable for Order {
         Self: Sized,
     {
         find_record_by_id(conn, id)
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct ArticleStatistics {
+    pub ordered_quantities: HashMap<i32, i32>,
+    pub article_revenue: HashMap<i32, f64>,
+}
+
+
+impl ArticleStatistics {
+    pub fn new(ordered_quantities: HashMap<i32, i32>, article_revenue: HashMap<i32, f64>) -> Self {
+        ArticleStatistics { ordered_quantities, article_revenue }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct OrderStatistics {
+    pub total_prices: HashMap<i32, f64>
+}
+
+impl OrderStatistics {
+    pub fn new(total_prices: HashMap<i32, f64>) -> Self {
+        OrderStatistics { total_prices }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Statistics {
+    pub article_statistics: ArticleStatistics,
+    pub order_statistics: OrderStatistics,
+}
+
+impl Statistics {
+    pub fn new(article_statistics: ArticleStatistics, order_statistics: OrderStatistics) -> Self {
+        Statistics { article_statistics, order_statistics }
     }
 }
 

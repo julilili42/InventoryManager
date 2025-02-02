@@ -6,13 +6,14 @@ use axum::{
 };
 
 use csv::ReaderBuilder;
-use std::{collections::HashMap, fmt::Debug, io::Cursor};
+use std::{fmt::Debug, io::Cursor};
 
 use crate::core::{
+    statistics::stats::get_statistics,
     operations::find_record_by_id,
-    statistics::article_order_count,
-    types::{Article, DbPool, PdfRequest},
+    types::{Article, DbPool, PdfRequest, Statistics},
 };
+
 use crate::core::{
     operations::{
         delete_record_by_id, establish_connection, fetch_all_records, insert_record, update_record,
@@ -130,11 +131,11 @@ pub async fn handle_update_record<T: Mappable + Insertable + Debug>(
 // GET /operations/statistics
 pub async fn handle_statistics(
     Extension(pool): Extension<DbPool>,
-) -> Result<AxumJson<HashMap<i32, i32>>, (StatusCode, AxumJson<serde_json::Value>)> {
+) -> Result<AxumJson<Statistics>, (StatusCode, AxumJson<serde_json::Value>)> {
     let conn = establish_connection(&pool)?;
 
-    match article_order_count(&conn) {
-        Ok(collected_count) => Ok(AxumJson(collected_count)),
+    match get_statistics(&conn) {
+        Ok(statistics) => Ok(AxumJson(statistics)),
         Err(e) => Err((
             StatusCode::BAD_REQUEST,
             AxumJson(json!({ "error": format!("Failed to retrieve statistics: {}", e) })),

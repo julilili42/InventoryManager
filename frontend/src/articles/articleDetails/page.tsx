@@ -5,7 +5,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Article } from "@/lib/interfaces";
+import { Article, ArticleStatistics } from "@/lib/interfaces";
 import { searchArticle } from "@/lib/services/articleService";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -17,27 +17,38 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getArticleStatistics } from "@/lib/services/statisticService";
 
 export const ArticleDetails = () => {
   const { article_id } = useParams();
   const navigate = useNavigate();
   const [fetchedArticle, setFetchedArticle] = useState<Article | null>(null);
+  const [fetchedArticleStatistics, setFetchedArticleStatistics] =
+    useState<ArticleStatistics | null>(null);
+
+  const extractArticleStatistics = (
+    article_stats: ArticleStatistics | null,
+    id: number
+  ) => ({
+    ordered_quantity: article_stats?.ordered_quantities[id] ?? NaN,
+    article_revenue: article_stats?.article_revenue[id] ?? NaN,
+  });
 
   useEffect(() => {
-    console.log(article_id);
     const fetchArticle = async () => {
-      try {
-        if (article_id) {
-          const article = await searchArticle(Number(article_id));
-          setFetchedArticle(article);
-        }
-      } catch (error) {
-        console.error("Error fetching order details:", error);
-        setFetchedArticle(null);
+      if (article_id) {
+        const article = await searchArticle(Number(article_id));
+        setFetchedArticle(article);
       }
     };
 
+    const fetchStatistics = async () => {
+      const article_stats: ArticleStatistics = await getArticleStatistics();
+      setFetchedArticleStatistics(article_stats);
+    };
+
     fetchArticle();
+    fetchStatistics();
   }, [article_id]);
 
   return (
@@ -86,7 +97,14 @@ export const ArticleDetails = () => {
               <Truck />
               <div>
                 <CardTitle>Number of Orders</CardTitle>
-                <CardDescription className="text-xl">145</CardDescription>
+                <CardDescription className="text-xl">
+                  {
+                    extractArticleStatistics(
+                      fetchedArticleStatistics,
+                      Number(article_id)
+                    ).ordered_quantity
+                  }
+                </CardDescription>
               </div>
             </CardHeader>
           </Card>
@@ -106,7 +124,15 @@ export const ArticleDetails = () => {
               <HandCoins />
               <div>
                 <CardTitle>Total Revenue</CardTitle>
-                <CardDescription className="text-xl">1000 €</CardDescription>
+                <CardDescription className="text-xl">
+                  {
+                    extractArticleStatistics(
+                      fetchedArticleStatistics,
+                      Number(article_id)
+                    ).article_revenue
+                  }{" "}
+                  €
+                </CardDescription>
               </div>
             </CardHeader>
           </Card>

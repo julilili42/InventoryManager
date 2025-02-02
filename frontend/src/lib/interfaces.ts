@@ -60,6 +60,20 @@ export interface OrderItem {
   quantity: number;
 }
 
+export interface ArticleStatistics {
+  ordered_quantities: { [key: number]: number };
+  article_revenue: { [key: number]: number };
+}
+
+export interface OrderStatistics {
+  total_prices: { [key: number]: number };
+}
+
+export interface Statistics {
+  article_statistics: ArticleStatistics;
+  order_statistics: OrderStatistics;
+}
+
 export enum DeliveryStatus {
   Pending = "Pending",
   Completed = "Completed",

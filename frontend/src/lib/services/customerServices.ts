@@ -1,7 +1,7 @@
 //customerServices.ts
 import { del, post, get } from "@/lib/api";
 import { Customer } from "@/lib/interfaces";
-import { handleApiError } from "../error";
+import { handleApiError } from "@/lib/error";
 
 export const fetchCustomers = async (): Promise<Customer[]> => {
   try {

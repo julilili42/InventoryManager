@@ -8,7 +8,7 @@ export const fetchArticles = async (): Promise<Article[]> => {
     return await get({ route: "/articles" });
   } catch (error) {
     handleApiError(error, "Error while fetching articles:");
-    throw error; // Damit der Store den Fehler handhaben kann
+    throw error;
   }
 };
 

@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router";
-import { deleteOrders, searchOrders } from "@/lib/services/orderServices";
+import { deleteOrders } from "@/lib/services/orderServices";
 import { useEffect, useState } from "react";
+import { getTotalPrice } from "@/lib/services/statisticService";
 
 export const columns: ColumnDef<Order>[] = [
   {
@@ -95,34 +96,16 @@ export const columns: ColumnDef<Order>[] = [
     accessorKey: "price",
     header: "Total Price",
     cell: ({ row }) => {
-      const [totalPrice, setTotalPrice] = useState<number | null>(null);
+      const [totalPrice, setTotalPrice] = useState<number>(NaN);
       useEffect(() => {
         const fetchTotalPrice = async () => {
-          try {
-            const orderId: number = row.getValue("order_id");
-            const order = await searchOrders(orderId); // Suche die Order
-            if (order) {
-              const price = order.items.reduce(
-                (sum, item) => sum + item.article.price * item.quantity,
-                0
-              );
-              setTotalPrice(price); // Setze den berechneten Preis
-            } else {
-              console.error("Order not found for ID:", orderId);
-              setTotalPrice(0);
-            }
-          } catch (error) {
-            console.error("Error fetching total price:", error);
-            setTotalPrice(0);
-          }
+          const total_prices: { [key: number]: number } = await getTotalPrice();
+          const order_id = row.getValue("order_id");
+          setTotalPrice(total_prices[Number(order_id)]);
         };
 
         fetchTotalPrice();
       }, [row]);
-
-      if (totalPrice === null) {
-        return <div>???</div>;
-      }
 
       return <div>{totalPrice.toFixed(2)} €</div>;
     },
