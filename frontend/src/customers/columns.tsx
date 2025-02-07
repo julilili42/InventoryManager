@@ -11,6 +11,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { StateKeys, useStore } from "@/lib/store";
+import { deleteCustomers } from "@/lib/services/customerServices";
+import { useNavigate } from "react-router";
 
 export const columns: ColumnDef<Customer>[] = [
   {
@@ -89,6 +92,21 @@ export const columns: ColumnDef<Customer>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
+      const navigate = useNavigate();
+      const customer_id: number = row.getValue("customer_id");
+      const customer_email: string | undefined = row.getValue("email");
+      const { customerData, setState } = useStore();
+
+      const deleteRow = async (delete_ids: number[]) => {
+        await deleteCustomers(delete_ids);
+        const new_data = customerData
+          ? customerData.filter(
+              (customer) => !delete_ids.includes(customer.customer_id)
+            )
+          : null;
+        setState(StateKeys.CustomerData, new_data);
+      };
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -99,7 +117,12 @@ export const columns: ColumnDef<Customer>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>View user</DropdownMenuItem>
-            <DropdownMenuItem>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => deleteRow([customer_id])}>
+              Delete
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <a href={`mailto:${customer_email}`}>Contact via Email</a>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

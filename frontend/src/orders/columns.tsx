@@ -17,6 +17,8 @@ import { useNavigate } from "react-router";
 import { deleteOrders } from "@/lib/services/orderServices";
 import { useEffect, useState } from "react";
 import { getTotalPrice } from "@/lib/services/statisticService";
+import { StateKeys, useStore } from "@/lib/store";
+import { pdf_gen } from "@/lib/services/importExportService";
 
 export const columns: ColumnDef<Order>[] = [
   {
@@ -150,7 +152,29 @@ export const columns: ColumnDef<Order>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const navigate = useNavigate();
+      const { orderData, setState } = useStore();
+
       const orderId: number = row.getValue("order_id");
+      const order: Order | undefined = orderData?.find(
+        (order) => order.order_id === orderId
+      );
+      const customerEmail: string | undefined = order?.customer.email;
+
+      const deleteRow = async (delete_ids: number[]) => {
+        await deleteOrders(delete_ids);
+        const new_data = orderData
+          ? orderData.filter((order) => !delete_ids.includes(order.order_id))
+          : null;
+        setState(StateKeys.OrderData, new_data);
+      };
+
+      const handleDownloadReceipt = () => {
+        if (order) {
+          pdf_gen(order);
+        } else {
+          console.error("Order nicht gefunden");
+        }
+      };
 
       return (
         <DropdownMenu>
@@ -164,9 +188,13 @@ export const columns: ColumnDef<Order>[] = [
             <DropdownMenuItem onClick={() => navigate(`/orders/${orderId}`)}>
               View Order
             </DropdownMenuItem>
-            <DropdownMenuItem>Download Receipt</DropdownMenuItem>
-            <DropdownMenuItem>Contact via Email</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => deleteOrders([orderId])}>
+            <DropdownMenuItem onClick={() => handleDownloadReceipt()}>
+              Download Receipt
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <a href={`mailto:${customerEmail}`}>Contact via Email</a>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => deleteRow([orderId])}>
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

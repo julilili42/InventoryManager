@@ -13,6 +13,8 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router";
+import { StateKeys, useStore } from "@/lib/store";
+import { deleteArticles } from "@/lib/services/articleService";
 
 export const columns: ColumnDef<Article>[] = [
   {
@@ -98,6 +100,19 @@ export const columns: ColumnDef<Article>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const articleId: number = row.getValue("article_id");
+
+      const { articleData, setState } = useStore();
+
+      const deleteRow = async (delete_ids: number[]) => {
+        await deleteArticles(delete_ids);
+        const new_data = articleData
+          ? articleData.filter(
+              (article) => !delete_ids.includes(article.article_id)
+            )
+          : null;
+        setState(StateKeys.ArticleData, new_data);
+      };
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -112,7 +127,9 @@ export const columns: ColumnDef<Article>[] = [
             >
               View article
             </DropdownMenuItem>
-            <DropdownMenuItem>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => deleteRow([articleId])}>
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
