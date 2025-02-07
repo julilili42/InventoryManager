@@ -11,7 +11,7 @@ use std::{fmt::Debug, io::Cursor};
 use crate::core::{
     statistics::stats::get_statistics,
     operations::find_record_by_id,
-    types::{Article, DbPool, PdfRequest, Statistics},
+    types::{Article, DbPool, Order, Statistics},
 };
 
 use crate::core::{
@@ -22,15 +22,7 @@ use crate::core::{
 };
 use serde_json::json;
 
-use crate::api::pdf::generate_pdf;
-
-// POST /pdf_gen
-pub async fn handle_generate_pdf(
-    Json(data): Json<PdfRequest>,
-) -> Result<Response, (StatusCode, AxumJson<serde_json::Value>)> {
-    let pdf_response = generate_pdf(Json(data)).await;
-    Ok(pdf_response)
-}
+use crate::api::pdf_gen::pdf::fetch_pdf;
 
 // GET <T>/search/:id
 pub async fn handle_search<T: Mappable + Insertable>(
@@ -142,6 +134,18 @@ pub async fn handle_statistics(
         )),
     }
 }
+
+
+// POST /pdf_gen
+pub async fn handle_generate_pdf(
+    Json(order): Json<Order>,
+) -> Result<Response, (StatusCode, AxumJson<serde_json::Value>)> {
+    let pdf_response = fetch_pdf(Json(order)).await;
+    Ok(pdf_response)
+}
+
+
+
 
 pub async fn handle_import_csv(
     Extension(pool): Extension<DbPool>,

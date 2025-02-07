@@ -5,7 +5,7 @@ import { Customer, Order, OrderItem } from "@/lib/interfaces";
 import { searchCustomer } from "@/lib/services/customerServices";
 import { OrderSummary } from "./orderSummary";
 import { OrderNumber } from "./orderNumber";
-import { OrderItems } from "./OrderItems";
+import { OrderItems } from "./orderItems";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Printer, Pen } from "lucide-react";
 import { pdf_gen } from "@/lib/services/importExportService";
@@ -53,13 +53,10 @@ export const OrderDetails = () => {
           <Button
             variant="outline"
             onClick={() => {
-              if (fetchedItems && fetchedCustomer) {
-                pdf_gen({
-                  article: fetchedItems[0].article,
-                  customer: fetchedCustomer,
-                });
+              if (fetchedOrder) {
+                pdf_gen(fetchedOrder);
               } else {
-                console.error("Missing data: fetchedItems or fetchedCustomer");
+                console.error("Missing data: fetchedOrder");
               }
             }}
           >

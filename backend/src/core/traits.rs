@@ -1,16 +1,17 @@
 // traits.rs
-use rusqlite::Connection;
+use rusqlite::{Row, Connection, Result};
+use rusqlite::types::ToSqlOutput;
 
 /// Mapping of database row to a type
 pub trait Mappable {
-    fn from_row(row: &rusqlite::Row, conn: Option<&rusqlite::Connection>) -> rusqlite::Result<Self>
+    fn from_row(row: &Row, conn: &Connection) -> Result<Self>
     where
         Self: Sized;
 }
 
 /// Allows searching for an record in the database by ID
 pub trait Searchable {
-    fn search(conn: &rusqlite::Connection, id: i32) -> rusqlite::Result<Self>
+    fn search(conn: &Connection, id: i32) -> Result<Self>
     where
         Self: Sized;
 }
@@ -36,13 +37,13 @@ pub trait Insertable {
     fn id_value(&self) -> i32;
 
     // Returns all values for specific type
-    fn values(&self) -> Vec<rusqlite::types::ToSqlOutput<'_>>;
+    fn values(&self) -> Vec<ToSqlOutput<'_>>;
 
-    fn post_insert(&self, _conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    fn post_insert(&self, _conn: &Connection) -> Result<()> {
         Ok(()) // do nothing by default
     }
 
-    fn post_delete(_id_value: Option<&i32>, _conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    fn post_delete(_id_value: Option<&i32>, _conn: &Connection) -> Result<()> {
         Ok(()) // do nothing by default
     }
 }

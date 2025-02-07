@@ -1,6 +1,6 @@
 // importExportService.ts
 import { post } from "@/lib/api";
-import { Article, Customer } from "@/lib/interfaces";
+import { Order } from "@/lib/interfaces";
 import { handleApiError } from "../error";
 
 export const importCSV = async (file: File): Promise<void> => {
@@ -14,22 +14,12 @@ export const importCSV = async (file: File): Promise<void> => {
   }
 };
 
-export interface pdfRequest {
-  article: Article;
-  customer: Customer;
-}
-
-export const pdf_gen = async (data: pdfRequest): Promise<void> => {
+export const pdf_gen = async (order: Order): Promise<void> => {
   try {
     const response = await post({
       route: "/operations/pdf",
       body: {
-        articles: {
-          ...data.article,
-        },
-        customer: {
-          ...data.customer,
-        },
+        ...order,
       },
       responseType: "blob",
     });
@@ -42,7 +32,7 @@ export const pdf_gen = async (data: pdfRequest): Promise<void> => {
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = `article_${data.article.article_id}.pdf`;
+    link.download = `Order ${order.order_id}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -2,7 +2,8 @@
 use crate::core::operations::{fetch_order_items, find_record_by_id};
 use crate::core::traits::{Insertable, Mappable, Searchable};
 use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::params;
+use rusqlite::{params, Row, Connection, Result, Error};
+use rusqlite::types::{ToSqlOutput, Null};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -40,9 +41,9 @@ impl Article {
 
 impl Mappable for Article {
     fn from_row(
-        row: &rusqlite::Row,
-        _conn: Option<&rusqlite::Connection>,
-    ) -> rusqlite::Result<Self> {
+        row: &Row,
+        _conn: &Connection,
+    ) -> Result<Self> {
         Ok(Article::new(
             row.get(0)?,
             row.get(1)?,
@@ -55,7 +56,7 @@ impl Mappable for Article {
 }
 
 impl Searchable for Article {
-    fn search(conn: &rusqlite::Connection, id: i32) -> rusqlite::Result<Self>
+    fn search(conn: &Connection, id: i32) -> Result<Self>
     where
         Self: Sized,
     {
@@ -84,7 +85,7 @@ impl Insertable for Article {
         self.article_id
     }
 
-    fn values(&self) -> Vec<rusqlite::types::ToSqlOutput<'_>> {
+    fn values(&self) -> Vec<ToSqlOutput<'_>> {
         vec![
             self.article_id.into(),
             self.name.clone().into(),
@@ -93,7 +94,7 @@ impl Insertable for Article {
             self.stock.into(),
             match &self.category {
                 Some(s) => s.as_str().into(),
-                None => rusqlite::types::Null.into(),
+                None => Null.into(),
             },
         ]
     }
@@ -134,9 +135,10 @@ impl Customer {
 
 impl Mappable for Customer {
     fn from_row(
-        row: &rusqlite::Row,
-        _conn: Option<&rusqlite::Connection>,
-    ) -> rusqlite::Result<Self> {
+        row: &Row,
+        _conn: &Connection,
+    ) -> Result<Self> {
+
         Ok(Customer::new(
             row.get(0)?,
             row.get(1)?,
@@ -172,7 +174,7 @@ impl Insertable for Customer {
         self.customer_id
     }
 
-    fn values(&self) -> Vec<rusqlite::types::ToSqlOutput<'_>> {
+    fn values(&self) -> Vec<ToSqlOutput<'_>> {
         vec![
             self.customer_id.into(),
             self.first_name.clone().into(),
@@ -186,7 +188,7 @@ impl Insertable for Customer {
 }
 
 impl Searchable for Customer {
-    fn search(conn: &rusqlite::Connection, id: i32) -> rusqlite::Result<Self>
+    fn search(conn: &Connection, id: i32) -> Result<Self>
     where
         Self: Sized,
     {
@@ -196,8 +198,8 @@ impl Searchable for Customer {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OrderItem {
-    article: Article,
-    quantity: i32,
+    pub article: Article,
+    pub quantity: i32,
 }
 
 impl OrderItem {
@@ -274,37 +276,23 @@ impl Order {
 
 impl Mappable for Order {
     fn from_row(
-        row: &rusqlite::Row,
-        conn: Option<&rusqlite::Connection>,
-    ) -> rusqlite::Result<Self> {
+        row: &Row,
+        conn: &Connection,
+    ) -> Result<Self> {
         let order_id = row.get(0)?;
-        let fetched_order_items = match conn {
-            Some(conn) => fetch_order_items(conn, order_id)?,
-            None => {
-                return Err(rusqlite::Error::InvalidParameterName(String::from(
-                    "Connection is None",
-                )))
-            }
-        };
+        let fetched_order_items = fetch_order_items(conn, order_id)?;
 
         let customer_id = row.get(1)?;
-        let fetched_customer = match conn {
-            Some(conn) => find_record_by_id::<Customer>(conn, customer_id)?,
-            None => {
-                return Err(rusqlite::Error::InvalidParameterName(String::from(
-                    "Connection is None",
-                )))
-            }
-        };
+        let fetched_customer = find_record_by_id::<Customer>(conn, customer_id)?;
 
         let date = row.get(2)?;
         let order_type: String = row.get(3)?;
         let status: String = row.get(4)?;
 
         let order_type = OrderType::from_str(&order_type)
-            .ok_or_else(|| rusqlite::Error::InvalidParameterName("Invalid order_type".into()))?;
+            .ok_or_else(|| Error::InvalidParameterName("Invalid order_type".into()))?;
         let status = OrderStatus::from_str(&status)
-            .ok_or_else(|| rusqlite::Error::InvalidParameterName("Invalid status".into()))?;
+            .ok_or_else(|| Error::InvalidParameterName("Invalid status".into()))?;
 
         Ok(Order::new(
             order_id,
@@ -332,7 +320,7 @@ impl Insertable for Order {
         self.order_id
     }
 
-    fn values(&self) -> Vec<rusqlite::types::ToSqlOutput<'_>> {
+    fn values(&self) -> Vec<ToSqlOutput<'_>> {
         vec![
             self.order_id.into(),
             self.customer.customer_id.into(),
@@ -342,7 +330,7 @@ impl Insertable for Order {
         ]
     }
 
-    fn post_insert(&self, conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    fn post_insert(&self, conn: &Connection) -> Result<()> {
         let query = "
             INSERT INTO order_article (order_id, article_id, quantity)
             VALUES (?1, ?2, ?3)
@@ -361,7 +349,7 @@ impl Insertable for Order {
         Ok(())
     }
 
-    fn post_delete(id_value: Option<&i32>, conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    fn post_delete(id_value: Option<&i32>, conn: &Connection) -> Result<()> {
         match id_value {
             Some(id_value) => {
                 let query = "DELETE FROM order_article WHERE order_id = ?1";
@@ -380,7 +368,7 @@ impl Insertable for Order {
 }
 
 impl Searchable for Order {
-    fn search(conn: &rusqlite::Connection, id: i32) -> rusqlite::Result<Self>
+    fn search(conn: &Connection, id: i32) -> Result<Self>
     where
         Self: Sized,
     {
@@ -422,12 +410,6 @@ impl Statistics {
     pub fn new(article_statistics: ArticleStatistics, order_statistics: OrderStatistics) -> Self {
         Statistics { article_statistics, order_statistics }
     }
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct PdfRequest {
-    pub articles: Article,
-    pub customer: Customer,
 }
 
 pub type DbPool = Arc<r2d2::Pool<SqliteConnectionManager>>;

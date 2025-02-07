@@ -1,5 +1,5 @@
 // operations.rs
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, Result, Error};
 
 use axum::{http::StatusCode, response::Json as AxumJson};
 
@@ -22,7 +22,7 @@ pub fn establish_connection(
     })
 }
 
-pub fn update_record<T: Insertable>(conn: &Connection, item: &T) -> rusqlite::Result<()> {
+pub fn update_record<T: Insertable>(conn: &Connection, item: &T) -> Result<()> {
     let table = T::table_name();
     let columns = T::columns();
     let id_column = T::id_column();
@@ -48,7 +48,7 @@ pub fn update_record<T: Insertable>(conn: &Connection, item: &T) -> rusqlite::Re
 pub fn find_record_by_id<T: Mappable + Insertable>(
     conn: &Connection,
     id_value: i32,
-) -> rusqlite::Result<T> {
+) -> Result<T> {
     let table = T::table_name();
     let id_column = T::id_column();
     let columns = T::columns().join(",");
@@ -56,19 +56,19 @@ pub fn find_record_by_id<T: Mappable + Insertable>(
     let query = format!("SELECT {} FROM {} WHERE {} = ?1", columns, table, id_column);
 
     let mut stmt = conn.prepare(&query)?;
-    let mut iter = stmt.query_map([id_value], |row| T::from_row(row, Some(conn)))?;
+    let mut iter = stmt.query_map([id_value], |row| T::from_row(row, conn))?;
 
     iter.next()
-        .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows)?
+        .ok_or_else(|| Error::QueryReturnedNoRows)?
         .map_err(|err| err)
 }
 
 pub fn insert_record<T: Mappable + Insertable>(
     conn: &Connection,
     item: &T,
-) -> rusqlite::Result<()> {
+) -> Result<()> {
     if T::check_duplicate(conn, item.id_value()) {
-        return Err(rusqlite::Error::ToSqlConversionFailure(Box::new(
+        return Err(Error::ToSqlConversionFailure(Box::new(
             std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("Item id {} is already beeing used.", item.id_value()).to_string(),
@@ -102,7 +102,7 @@ pub fn insert_record<T: Mappable + Insertable>(
 pub fn delete_record_by_id<T: Mappable + Insertable + Debug>(
     conn: &Connection,
     id: &Option<i32>,
-) -> rusqlite::Result<()> {
+) -> Result<()> {
     let id_column = T::id_column();
     let table = T::table_name();
 
@@ -127,7 +127,7 @@ pub fn delete_record_by_id<T: Mappable + Insertable + Debug>(
 
 pub fn fetch_all_records<T: Insertable + Mappable + Debug>(
     conn: &Connection,
-) -> rusqlite::Result<Vec<T>> {
+) -> Result<Vec<T>> {
     let table = T::table_name();
 
     let columns = T::columns().join(",");
@@ -136,7 +136,7 @@ pub fn fetch_all_records<T: Insertable + Mappable + Debug>(
 
     let mut stmt = conn.prepare(&query)?;
 
-    let iter = stmt.query_map([], |row| T::from_row(row, Some(conn)))?;
+    let iter = stmt.query_map([], |row| T::from_row(row, conn))?;
 
     let mut item_list = Vec::new();
     for item in iter {
@@ -147,9 +147,9 @@ pub fn fetch_all_records<T: Insertable + Mappable + Debug>(
 }
 
 pub fn fetch_order_items(
-    conn: &rusqlite::Connection,
+    conn: &Connection,
     order_id: i32,
-) -> rusqlite::Result<Vec<OrderItem>> {
+) -> Result<Vec<OrderItem>> {
     let mut stmt = conn.prepare(
         "
         SELECT a.article_id, a.name, a.price, a.manufacturer, a.stock, a.category, oa.quantity
@@ -176,7 +176,7 @@ pub fn fetch_order_items(
     article_iter.collect::<Result<Vec<_>, _>>()
 }
 
-pub fn initialize_tables(conn: &Connection) -> rusqlite::Result<()> {
+pub fn initialize_tables(conn: &Connection) -> Result<()> {
     conn.execute_batch(
         "
         -- Table for articles

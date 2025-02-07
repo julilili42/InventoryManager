@@ -37,8 +37,6 @@ const post = async (request: Request) => {
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
     };
 
-    console.log(request.body);
-
     const response = await axios.post(
       `${API_URL}${request.route}`,
       request.body,
