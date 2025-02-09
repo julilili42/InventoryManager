@@ -7,6 +7,7 @@ import { OrderDetails } from "./orders/orderDetails/page";
 import { ArticleDetails } from "./articles/articleDetails/page";
 import { Navbar } from "./components/ui/navbar";
 import { BrowserRouter as Router, Route, Routes } from "react-router";
+import { CustomerDetails } from "./customers/customerDetails/page";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:order_id" element={<OrderDetails />} />
         <Route path="/customers" element={<Customers />} />
+        <Route path="/customers/:customer_id" element={<CustomerDetails />} />
       </Routes>
     </Router>
   );

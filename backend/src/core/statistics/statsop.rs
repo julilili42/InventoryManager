@@ -69,3 +69,84 @@ pub fn get_total_prices(conn: &Connection) -> Result<HashMap<i32, f64>> {
     }
     Ok(totals)
 }
+
+
+pub fn get_total_orders_customer(conn: &Connection) -> Result<HashMap<i32, i32>> {
+    let mut stmt = conn.prepare(
+        "SELECT customer_id, COUNT(order_id) AS order_count 
+         FROM orders 
+         GROUP BY customer_id"
+    )?;
+
+    let mut results = HashMap::new();
+
+    let rows = stmt.query_map([], |row| {
+        let customer_id: i32 = row.get(0)?;
+        let order_count: i32 = row.get(1)?;
+        Ok((customer_id, order_count))
+    })?;
+
+    for row in rows {
+        let (customer_id, order_count) = row?;
+        results.insert(customer_id, order_count);
+    }
+
+    Ok(results)
+}
+
+
+
+pub fn get_total_revenue_customer(conn: &Connection) -> Result<HashMap<i32, f64>> {
+    let mut stmt = conn.prepare(
+        "SELECT o.customer_id, COALESCE(SUM(a.price * oa.quantity), 0) AS total_revenue
+         FROM orders o
+         LEFT JOIN order_article oa ON o.order_id = oa.order_id
+         LEFT JOIN article a ON oa.article_id = a.article_id
+         GROUP BY o.customer_id"
+    )?;
+
+    let mut results = HashMap::new();
+
+    let rows = stmt.query_map([], |row| {
+        let customer_id: i32 = row.get(0)?;
+        let total_revenue: f64 = row.get(1)?;
+        Ok((customer_id, total_revenue))
+    })?;
+
+    for row in rows {
+        let (customer_id, total_revenue) = row?;
+        results.insert(customer_id, total_revenue);
+    }
+
+    Ok(results)
+}
+
+
+pub fn get_most_bought_item_customer(conn: &Connection) -> Result<HashMap<i32, String>> {
+    let mut stmt = conn.prepare(
+        "SELECT o.customer_id, a.name 
+         FROM orders o
+         JOIN order_article oa ON o.order_id = oa.order_id
+         JOIN article a ON oa.article_id = a.article_id
+         WHERE oa.quantity = (
+             SELECT MAX(sub_oa.quantity) 
+             FROM order_article sub_oa 
+             WHERE sub_oa.order_id = o.order_id
+         )"
+    )?;
+
+    let mut results = HashMap::new();
+
+    let rows = stmt.query_map([], |row| {
+        let customer_id: i32 = row.get(0)?;
+        let article_name: String = row.get(1)?;
+        Ok((customer_id, article_name))
+    })?;
+
+    for row in rows {
+        let (customer_id, article_name) = row?;
+        results.insert(customer_id, article_name);
+    }
+
+    Ok(results)
+}

@@ -116,7 +116,11 @@ export const columns: ColumnDef<Customer>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>View user</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => navigate(`/customers/${customer_id}`)}
+            >
+              View user
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => deleteRow([customer_id])}>
               Delete
             </DropdownMenuItem>

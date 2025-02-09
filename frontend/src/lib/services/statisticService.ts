@@ -1,6 +1,11 @@
 import { handleApiError } from "@/lib/error";
 import { get } from "@/lib/api";
-import { Statistics, OrderStatistics, ArticleStatistics } from "../interfaces";
+import {
+  Statistics,
+  OrderStatistics,
+  ArticleStatistics,
+  CustomerStatistics,
+} from "../interfaces";
 
 const getStatistics = async () => {
   try {
@@ -19,6 +24,11 @@ export const getArticleStatistics = async (): Promise<ArticleStatistics> => {
 export const getOrderStatistics = async (): Promise<OrderStatistics> => {
   const statistics: Statistics = await getStatistics();
   return statistics.order_statistics;
+};
+
+export const getCustomerStatistics = async (): Promise<CustomerStatistics> => {
+  const statistics: Statistics = await getStatistics();
+  return statistics.customer_statistics;
 };
 
 export const getTotalPrice = async (): Promise<{ [key: number]: number }> => {

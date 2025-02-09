@@ -22,7 +22,7 @@ use crate::core::{
 };
 use serde_json::json;
 
-use crate::api::pdf_gen::pdf::fetch_pdf;
+use crate::core::pdf::generation::fetch_pdf;
 
 // GET <T>/search/:id
 pub async fn handle_search<T: Mappable + Insertable>(

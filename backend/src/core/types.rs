@@ -401,14 +401,28 @@ impl OrderStatistics {
 }
 
 #[derive(Deserialize, Serialize)]
+pub struct CustomerStatistics {
+    pub number_of_orders: HashMap<i32, i32>,
+    pub total_revenue: HashMap<i32, f64>,
+    pub most_bought_item: HashMap<i32, String>
+}
+
+impl CustomerStatistics {
+    pub fn new(number_of_orders: HashMap<i32, i32>, total_revenue: HashMap<i32, f64>, most_bought_item: HashMap<i32, String>) -> Self {
+        CustomerStatistics { number_of_orders, total_revenue, most_bought_item }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct Statistics {
     pub article_statistics: ArticleStatistics,
     pub order_statistics: OrderStatistics,
+    pub customer_statistics: CustomerStatistics,
 }
 
 impl Statistics {
-    pub fn new(article_statistics: ArticleStatistics, order_statistics: OrderStatistics) -> Self {
-        Statistics { article_statistics, order_statistics }
+    pub fn new(article_statistics: ArticleStatistics, order_statistics: OrderStatistics, customer_statistics: CustomerStatistics) -> Self {
+        Statistics { article_statistics, order_statistics, customer_statistics }
     }
 }
 

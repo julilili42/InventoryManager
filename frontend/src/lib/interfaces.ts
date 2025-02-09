@@ -69,9 +69,16 @@ export interface OrderStatistics {
   total_prices: { [key: number]: number };
 }
 
+export interface CustomerStatistics {
+  number_of_orders: { [key: number]: number };
+  total_revenue: { [key: number]: number };
+  most_bought_item: { [key: number]: number };
+}
+
 export interface Statistics {
   article_statistics: ArticleStatistics;
   order_statistics: OrderStatistics;
+  customer_statistics: CustomerStatistics;
 }
 
 export enum DeliveryStatus {
