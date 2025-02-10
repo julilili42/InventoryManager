@@ -44,6 +44,7 @@ export function ArticleTable<TData extends { quantity?: number }, TValue>({
   showDelete = false,
   showPagination = false,
   onSelectionChange,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -117,7 +118,7 @@ export function ArticleTable<TData extends { quantity?: number }, TValue>({
           {/* Filter */}
           {showFilter && (
             <Input
-              placeholder="Filter article id.."
+              placeholder="Filter Article Id.."
               value={
                 (table.getColumn("article_id")?.getFilterValue() as string) ??
                 ""
@@ -211,6 +212,10 @@ export function ArticleTable<TData extends { quantity?: number }, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => {
+                    if (onRowClick) onRowClick(row.getValue("article_id"));
+                  }}
+                  className="cursor-pointer"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

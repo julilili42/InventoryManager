@@ -4,7 +4,11 @@ import { columns } from "./columns";
 import { ArticleTable } from "./articleTable";
 import { useStore } from "@/lib/store";
 
-export function TableArticle() {
+export function TableArticle({
+  onRowClick,
+}: {
+  onRowClick?: (customerId: number) => void;
+}) {
   // global
   const { articleData, fetchArticles } = useStore();
 
@@ -33,6 +37,7 @@ export function TableArticle() {
           showFilter={true}
           showPagination={true}
           showSelect={true}
+          onRowClick={onRowClick}
         />
       ) : (
         <div>Keine Daten verfügbar</div>

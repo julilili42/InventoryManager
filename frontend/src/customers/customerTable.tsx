@@ -38,6 +38,7 @@ import { deleteCustomers } from "@/lib/services/customerServices";
 export function CustomerTable<TData, TValue>({
   columns,
   data,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -93,10 +94,11 @@ export function CustomerTable<TData, TValue>({
     setRowSelection({});
   };
   return (
-    <div>
+    <>
       <div className="flex items-center justify-between">
+        {/* Filter */}
         <Input
-          placeholder="Filter customer id.."
+          placeholder="Filter Customer ID"
           value={
             (table.getColumn("customer_id")?.getFilterValue() as string) ?? ""
           }
@@ -106,12 +108,14 @@ export function CustomerTable<TData, TValue>({
           className="w-fit"
         />
         <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
+          {/* Deletion */}
           <Button
             variant={"destructive_muted"}
             onClick={() => deleteRow(selectedCustomers ?? [])}
           >
             <Trash2 /> Delete
           </Button>
+          {/* Select */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
@@ -142,6 +146,7 @@ export function CustomerTable<TData, TValue>({
           </DropdownMenu>
         </div>
       </div>
+      {/* Data Table */}
       <div className="mt-4 border rounded-md">
         <Table>
           <TableHeader>
@@ -168,6 +173,10 @@ export function CustomerTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => {
+                    if (onRowClick) onRowClick(row.getValue("customer_id"));
+                  }}
+                  className="cursor-pointer"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -216,6 +225,6 @@ export function CustomerTable<TData, TValue>({
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
       </div>
-    </div>
+    </>
   );
 }

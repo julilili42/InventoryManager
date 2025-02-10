@@ -19,6 +19,7 @@ export interface DataTableProps<TData, TValue> {
   showDelete?: boolean;
   showPagination?: boolean;
   onSelectionChange?: (selectedItems: ArticleSelection) => void;
+  onRowClick?: (customerId: number) => void;
   onQuantityChange?: (quantities: number[]) => void;
 }
 

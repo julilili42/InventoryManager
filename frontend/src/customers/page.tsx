@@ -4,7 +4,11 @@ import { columns } from "./columns";
 import { CustomerTable } from "./customerTable";
 import { useStore } from "@/lib/store";
 
-export function TableCustomer() {
+export function TableCustomer({
+  onRowClick,
+}: {
+  onRowClick?: (customerId: number) => void;
+}) {
   // global
   const { customerData, fetchCustomers } = useStore();
 
@@ -26,7 +30,11 @@ export function TableCustomer() {
   return (
     <div className="container py-10 mx-auto">
       {customerData ? (
-        <CustomerTable columns={columns} data={customerData} />
+        <CustomerTable
+          columns={columns}
+          data={customerData}
+          onRowClick={onRowClick}
+        />
       ) : (
         <div>Keine Daten verfügbar</div>
       )}

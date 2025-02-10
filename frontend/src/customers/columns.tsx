@@ -13,7 +13,6 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { StateKeys, useStore } from "@/lib/store";
 import { deleteCustomers } from "@/lib/services/customerServices";
-import { useNavigate } from "react-router";
 
 export const columns: ColumnDef<Customer>[] = [
   {
@@ -45,11 +44,15 @@ export const columns: ColumnDef<Customer>[] = [
     cell: ({ row }) => {
       const id = parseInt(row.getValue("customer_id"));
       return (
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2 cursor-default"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label="Select row"
+            className="cursor-default"
           />
           <span className="font-semibold">#{id}</span>
         </div>
@@ -92,7 +95,6 @@ export const columns: ColumnDef<Customer>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const navigate = useNavigate();
       const customer_id: number = row.getValue("customer_id");
       const customer_email: string | undefined = row.getValue("email");
       const { customerData, setState } = useStore();
@@ -116,11 +118,6 @@ export const columns: ColumnDef<Customer>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => navigate(`/customers/${customer_id}`)}
-            >
-              View user
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => deleteRow([customer_id])}>
               Delete
             </DropdownMenuItem>

@@ -46,11 +46,15 @@ export const columns: ColumnDef<Article>[] = [
     cell: ({ row }) => {
       const id = parseInt(row.getValue("article_id"));
       return (
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2 cursor-default"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label="Select row"
+            className="cursor-default"
           />
           <span className="font-semibold">#{id}</span>
         </div>
