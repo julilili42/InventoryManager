@@ -1,7 +1,10 @@
 // stats.rs
-use rusqlite::{Connection, Result};
+use crate::core::statistics::statsop::{
+    get_article_revenue, get_most_bought_item_customer, get_ordered_quantities,
+    get_total_orders_customer, get_total_prices, get_total_revenue_customer,
+};
 use crate::core::types::{ArticleStatistics, CustomerStatistics, OrderStatistics, Statistics};
-use crate::core::statistics::statsop::{get_article_revenue, get_ordered_quantities, get_total_prices, get_total_orders_customer, get_total_revenue_customer, get_most_bought_item_customer};
+use rusqlite::{Connection, Result};
 
 pub fn get_statistics(conn: &Connection) -> Result<Statistics> {
     let article_statistics = get_article_statistics(conn);
@@ -22,7 +25,6 @@ fn get_article_statistics(conn: &Connection) -> Result<ArticleStatistics> {
     Ok(article_statistics)
 }
 
-
 fn get_order_statistics(conn: &Connection) -> Result<OrderStatistics> {
     let total_price = get_total_prices(conn);
 
@@ -36,12 +38,8 @@ fn get_customer_statistics(conn: &Connection) -> Result<CustomerStatistics> {
     let total_revenue = get_total_revenue_customer(conn);
     let most_bought_item = get_most_bought_item_customer(conn);
 
-    let customer_statistics = CustomerStatistics::new(number_of_orders?, total_revenue?, most_bought_item?);
+    let customer_statistics =
+        CustomerStatistics::new(number_of_orders?, total_revenue?, most_bought_item?);
 
     Ok(customer_statistics)
 }
-
-
-
-
-

@@ -1,6 +1,6 @@
 // statsop.rs
-use std::collections::HashMap;
 use rusqlite::{Connection, Result};
+use std::collections::HashMap;
 
 pub fn get_ordered_quantities(conn: &Connection) -> Result<HashMap<i32, i32>> {
     let mut stmt = conn.prepare(
@@ -41,13 +41,11 @@ pub fn get_article_revenue(conn: &Connection) -> Result<HashMap<i32, f64>> {
 
     for row in rows {
         let (article_id, revenue) = row?;
-        revenue_map.insert(article_id, revenue); 
+        revenue_map.insert(article_id, revenue);
     }
 
     Ok(revenue_map)
 }
-
-
 
 pub fn get_total_prices(conn: &Connection) -> Result<HashMap<i32, f64>> {
     let mut stmt = conn.prepare(
@@ -55,13 +53,11 @@ pub fn get_total_prices(conn: &Connection) -> Result<HashMap<i32, f64>> {
          FROM orders o
          JOIN order_article oa ON o.order_id = oa.order_id
          JOIN article a ON a.article_id = oa.article_id
-         GROUP BY o.order_id"
+         GROUP BY o.order_id",
     )?;
 
     let mut totals = HashMap::new();
-    let rows = stmt.query_map([], |row| {
-        Ok((row.get::<_, i32>(0)?, row.get::<_, f64>(1)?))
-    })?;
+    let rows = stmt.query_map([], |row| Ok((row.get::<_, i32>(0)?, row.get::<_, f64>(1)?)))?;
 
     for row in rows {
         let (order_id, total_price) = row?;
@@ -70,12 +66,11 @@ pub fn get_total_prices(conn: &Connection) -> Result<HashMap<i32, f64>> {
     Ok(totals)
 }
 
-
 pub fn get_total_orders_customer(conn: &Connection) -> Result<HashMap<i32, i32>> {
     let mut stmt = conn.prepare(
         "SELECT customer_id, COUNT(order_id) AS order_count 
          FROM orders 
-         GROUP BY customer_id"
+         GROUP BY customer_id",
     )?;
 
     let mut results = HashMap::new();
@@ -94,15 +89,13 @@ pub fn get_total_orders_customer(conn: &Connection) -> Result<HashMap<i32, i32>>
     Ok(results)
 }
 
-
-
 pub fn get_total_revenue_customer(conn: &Connection) -> Result<HashMap<i32, f64>> {
     let mut stmt = conn.prepare(
         "SELECT o.customer_id, COALESCE(SUM(a.price * oa.quantity), 0) AS total_revenue
          FROM orders o
          LEFT JOIN order_article oa ON o.order_id = oa.order_id
          LEFT JOIN article a ON oa.article_id = a.article_id
-         GROUP BY o.customer_id"
+         GROUP BY o.customer_id",
     )?;
 
     let mut results = HashMap::new();
@@ -121,7 +114,6 @@ pub fn get_total_revenue_customer(conn: &Connection) -> Result<HashMap<i32, f64>
     Ok(results)
 }
 
-
 pub fn get_most_bought_item_customer(conn: &Connection) -> Result<HashMap<i32, String>> {
     let mut stmt = conn.prepare(
         "SELECT o.customer_id, a.name 
@@ -132,7 +124,7 @@ pub fn get_most_bought_item_customer(conn: &Connection) -> Result<HashMap<i32, S
              SELECT MAX(sub_oa.quantity) 
              FROM order_article sub_oa 
              WHERE sub_oa.order_id = o.order_id
-         )"
+         )",
     )?;
 
     let mut results = HashMap::new();

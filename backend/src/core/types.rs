@@ -2,8 +2,8 @@
 use crate::core::operations::{fetch_order_items, find_record_by_id};
 use crate::core::traits::{Insertable, Mappable, Searchable};
 use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::{params, Row, Connection, Result, Error};
-use rusqlite::types::{ToSqlOutput, Null};
+use rusqlite::types::{Null, ToSqlOutput};
+use rusqlite::{params, Connection, Error, Result, Row};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -40,10 +40,7 @@ impl Article {
 }
 
 impl Mappable for Article {
-    fn from_row(
-        row: &Row,
-        _conn: &Connection,
-    ) -> Result<Self> {
+    fn from_row(row: &Row, _conn: &Connection) -> Result<Self> {
         Ok(Article::new(
             row.get(0)?,
             row.get(1)?,
@@ -98,6 +95,23 @@ impl Insertable for Article {
             },
         ]
     }
+
+    fn post_delete(id_value: Option<&i32>, conn: &Connection) -> Result<()> {
+        if let Some(article_id) = id_value {
+            conn.execute(
+                "DELETE FROM order_article WHERE article_id = ?1",
+                params![article_id],
+            )?;
+
+            // Delete all orders that no longer have any linked articles after the previous deletion
+            conn.execute(
+            "DELETE FROM orders WHERE order_id NOT IN (SELECT DISTINCT order_id FROM order_article)",
+            params![],
+        )?;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -134,11 +148,7 @@ impl Customer {
 }
 
 impl Mappable for Customer {
-    fn from_row(
-        row: &Row,
-        _conn: &Connection,
-    ) -> Result<Self> {
-
+    fn from_row(row: &Row, _conn: &Connection) -> Result<Self> {
         Ok(Customer::new(
             row.get(0)?,
             row.get(1)?,
@@ -184,6 +194,22 @@ impl Insertable for Customer {
             self.zip_code.into(),
             self.email.clone().into(),
         ]
+    }
+
+    fn post_delete(id_value: Option<&i32>, conn: &Connection) -> Result<()> {
+        if let Some(customer_id) = id_value {
+            conn.execute(
+            "DELETE FROM order_article WHERE order_id IN (SELECT order_id FROM orders WHERE customer_id = ?1)",
+            params![customer_id],
+        )?;
+
+            conn.execute(
+                "DELETE FROM orders WHERE customer_id = ?1",
+                params![customer_id],
+            )?;
+        }
+
+        Ok(())
     }
 }
 
@@ -275,10 +301,7 @@ impl Order {
 }
 
 impl Mappable for Order {
-    fn from_row(
-        row: &Row,
-        conn: &Connection,
-    ) -> Result<Self> {
+    fn from_row(row: &Row, conn: &Connection) -> Result<Self> {
         let order_id = row.get(0)?;
         let fetched_order_items = fetch_order_items(conn, order_id)?;
 
@@ -382,16 +405,18 @@ pub struct ArticleStatistics {
     pub article_revenue: HashMap<i32, f64>,
 }
 
-
 impl ArticleStatistics {
     pub fn new(ordered_quantities: HashMap<i32, i32>, article_revenue: HashMap<i32, f64>) -> Self {
-        ArticleStatistics { ordered_quantities, article_revenue }
+        ArticleStatistics {
+            ordered_quantities,
+            article_revenue,
+        }
     }
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct OrderStatistics {
-    pub total_prices: HashMap<i32, f64>
+    pub total_prices: HashMap<i32, f64>,
 }
 
 impl OrderStatistics {
@@ -404,12 +429,20 @@ impl OrderStatistics {
 pub struct CustomerStatistics {
     pub number_of_orders: HashMap<i32, i32>,
     pub total_revenue: HashMap<i32, f64>,
-    pub most_bought_item: HashMap<i32, String>
+    pub most_bought_item: HashMap<i32, String>,
 }
 
 impl CustomerStatistics {
-    pub fn new(number_of_orders: HashMap<i32, i32>, total_revenue: HashMap<i32, f64>, most_bought_item: HashMap<i32, String>) -> Self {
-        CustomerStatistics { number_of_orders, total_revenue, most_bought_item }
+    pub fn new(
+        number_of_orders: HashMap<i32, i32>,
+        total_revenue: HashMap<i32, f64>,
+        most_bought_item: HashMap<i32, String>,
+    ) -> Self {
+        CustomerStatistics {
+            number_of_orders,
+            total_revenue,
+            most_bought_item,
+        }
     }
 }
 
@@ -421,8 +454,16 @@ pub struct Statistics {
 }
 
 impl Statistics {
-    pub fn new(article_statistics: ArticleStatistics, order_statistics: OrderStatistics, customer_statistics: CustomerStatistics) -> Self {
-        Statistics { article_statistics, order_statistics, customer_statistics }
+    pub fn new(
+        article_statistics: ArticleStatistics,
+        order_statistics: OrderStatistics,
+        customer_statistics: CustomerStatistics,
+    ) -> Self {
+        Statistics {
+            article_statistics,
+            order_statistics,
+            customer_statistics,
+        }
     }
 }
 

@@ -10,7 +10,7 @@ use std::{fmt::Debug, io::Cursor};
 
 use crate::core::{
     statistics::stats::get_statistics,
-    operations::find_record_by_id,
+    traits::Searchable,
     types::{Article, DbPool, Order, Statistics},
 };
 
@@ -25,14 +25,14 @@ use serde_json::json;
 use crate::core::pdf::generation::fetch_pdf;
 
 // GET <T>/search/:id
-pub async fn handle_search<T: Mappable + Insertable>(
+pub async fn handle_search<T: Mappable + Insertable + Searchable>(
     Extension(pool): Extension<DbPool>,
     id: Path<i32>,
 ) -> Result<AxumJson<T>, (StatusCode, AxumJson<serde_json::Value>)> {
     let conn = establish_connection(&pool)?;
     let search_id = id.0;
 
-    match find_record_by_id::<T>(&conn, search_id) {
+    match T::search(&conn, search_id) {
         Ok(item) => Ok(AxumJson(item)),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -135,7 +135,6 @@ pub async fn handle_statistics(
     }
 }
 
-
 // POST /pdf_gen
 pub async fn handle_generate_pdf(
     Json(order): Json<Order>,
@@ -143,9 +142,6 @@ pub async fn handle_generate_pdf(
     let pdf_response = fetch_pdf(Json(order)).await;
     Ok(pdf_response)
 }
-
-
-
 
 pub async fn handle_import_csv(
     Extension(pool): Extension<DbPool>,

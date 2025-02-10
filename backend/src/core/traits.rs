@@ -1,6 +1,6 @@
 // traits.rs
-use rusqlite::{Row, Connection, Result};
 use rusqlite::types::ToSqlOutput;
+use rusqlite::{Connection, Result, Row};
 
 /// Mapping of database row to a type
 pub trait Mappable {
@@ -11,7 +11,7 @@ pub trait Mappable {
 
 /// Allows searching for an record in the database by ID
 pub trait Searchable {
-    fn search(conn: &Connection, id: i32) -> Result<Self>
+    fn search(conn: &Connection, id_value: i32) -> Result<Self>
     where
         Self: Sized;
 }

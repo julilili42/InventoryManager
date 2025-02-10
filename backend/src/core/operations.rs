@@ -1,5 +1,5 @@
 // operations.rs
-use rusqlite::{params, Connection, Result, Error};
+use rusqlite::{params, Connection, Error, Result};
 
 use axum::{http::StatusCode, response::Json as AxumJson};
 
@@ -45,10 +45,7 @@ pub fn update_record<T: Insertable>(conn: &Connection, item: &T) -> Result<()> {
     Ok(())
 }
 
-pub fn find_record_by_id<T: Mappable + Insertable>(
-    conn: &Connection,
-    id_value: i32,
-) -> Result<T> {
+pub fn find_record_by_id<T: Mappable + Insertable>(conn: &Connection, id_value: i32) -> Result<T> {
     let table = T::table_name();
     let id_column = T::id_column();
     let columns = T::columns().join(",");
@@ -63,10 +60,7 @@ pub fn find_record_by_id<T: Mappable + Insertable>(
         .map_err(|err| err)
 }
 
-pub fn insert_record<T: Mappable + Insertable>(
-    conn: &Connection,
-    item: &T,
-) -> Result<()> {
+pub fn insert_record<T: Mappable + Insertable>(conn: &Connection, item: &T) -> Result<()> {
     if T::check_duplicate(conn, item.id_value()) {
         return Err(Error::ToSqlConversionFailure(Box::new(
             std::io::Error::new(
@@ -125,9 +119,7 @@ pub fn delete_record_by_id<T: Mappable + Insertable + Debug>(
     Ok(())
 }
 
-pub fn fetch_all_records<T: Insertable + Mappable + Debug>(
-    conn: &Connection,
-) -> Result<Vec<T>> {
+pub fn fetch_all_records<T: Insertable + Mappable + Debug>(conn: &Connection) -> Result<Vec<T>> {
     let table = T::table_name();
 
     let columns = T::columns().join(",");
@@ -146,10 +138,7 @@ pub fn fetch_all_records<T: Insertable + Mappable + Debug>(
     Ok(item_list)
 }
 
-pub fn fetch_order_items(
-    conn: &Connection,
-    order_id: i32,
-) -> Result<Vec<OrderItem>> {
+pub fn fetch_order_items(conn: &Connection, order_id: i32) -> Result<Vec<OrderItem>> {
     let mut stmt = conn.prepare(
         "
         SELECT a.article_id, a.name, a.price, a.manufacturer, a.stock, a.category, oa.quantity
