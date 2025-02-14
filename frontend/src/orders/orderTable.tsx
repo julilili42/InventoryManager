@@ -48,7 +48,6 @@ import { useEffect, useState } from "react";
 import { StateKeys, useStore } from "@/lib/store";
 import { Trash2, List, Terminal, Check } from "lucide-react";
 import { deleteOrders } from "@/lib/services/orderServices";
-import { useNavigate } from "react-router";
 
 export function OrderTable<TData, TValue>({
   columns,
@@ -58,6 +57,7 @@ export function OrderTable<TData, TValue>({
   showDelete = false,
   showPagination = false,
   showError = false,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -67,7 +67,6 @@ export function OrderTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const { orderData, setState, notification } = useStore();
-  const navigate = useNavigate();
 
   const table = useReactTable({
     data,
@@ -217,9 +216,10 @@ export function OrderTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onClick={() =>
-                    navigate(`/orders/${row.getValue("order_id")}`)
-                  }
+                  onClick={() => {
+                    if (onRowClick) onRowClick(row.getValue("order_id"));
+                  }}
+                  className="cursor-pointer"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

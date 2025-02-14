@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import { useNavigate } from "react-router";
 import { deleteOrders } from "@/lib/services/orderServices";
 import { useEffect, useState } from "react";
 import { getTotalPrice } from "@/lib/services/statisticService";
@@ -100,7 +99,7 @@ export const columns: ColumnDef<Order>[] = [
 
   {
     accessorKey: "price",
-    header: "Total Price",
+    header: "Total",
     cell: ({ row }) => {
       const [totalPrice, setTotalPrice] = useState<number>(NaN);
       useEffect(() => {
@@ -155,7 +154,6 @@ export const columns: ColumnDef<Order>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const navigate = useNavigate();
       const { orderData, setState } = useStore();
 
       const orderId: number = row.getValue("order_id");
@@ -189,9 +187,6 @@ export const columns: ColumnDef<Order>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => navigate(`/orders/${orderId}`)}>
-              View Order
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleDownloadReceipt()}>
               Download Receipt
             </DropdownMenuItem>

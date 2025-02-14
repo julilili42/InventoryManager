@@ -4,7 +4,11 @@ import { OrderTable } from "./orderTable";
 import { useStore } from "@/lib/store";
 import { columns } from "./columns";
 
-export function TableOrder() {
+export function TableOrder({
+  onRowClick,
+}: {
+  onRowClick?: (customerId: number) => void;
+}) {
   // global
   const { orderData, fetchOrders } = useStore();
 
@@ -34,6 +38,7 @@ export function TableOrder() {
           showPagination={true}
           showSelect={true}
           showError={true}
+          onRowClick={onRowClick}
         />
       ) : (
         <div>Keine Daten verfügbar</div>
