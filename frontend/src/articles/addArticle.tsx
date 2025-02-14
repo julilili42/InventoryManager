@@ -2,12 +2,12 @@
 import { Article } from "@/lib/interfaces";
 import { addArticle } from "@/lib/services/articleService";
 import { importCSV } from "@/lib/services/importExportService";
-
+import { isAxiosError } from "axios";
 import { StateKeys, useStore } from "@/lib/store";
 import { FormCard } from "@/components/ui/formCard";
 
 export const AddArticle = () => {
-  const { articleData, setState, fetchArticles } = useStore();
+  const { articleData, setState, fetchArticles, setNotification } = useStore();
 
   const fields = [
     {
@@ -52,13 +52,20 @@ export const AddArticle = () => {
 
   const handleSubmitArticle = async (newData: Article) => {
     try {
-      await addArticle(newData);
+      const request = await addArticle(newData);
       await fetchArticles();
       setState(StateKeys.ArticleData, [newData, ...(articleData ?? [])]);
-
+      setNotification({ success: request.message, error: null });
       console.log("Article added successfully");
+      setTimeout(() => setNotification({ success: null, error: null }), 5000);
     } catch (error) {
-      console.error("Error adding article:", error);
+      if (isAxiosError(error)) {
+        setNotification({ success: null, error });
+        console.error("Error adding article:", error);
+        setTimeout(() => setNotification({ success: null, error: null }), 5000);
+      } else {
+        console.error("Error adding article (no axios error):", error);
+      }
     }
   };
 

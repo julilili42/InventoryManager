@@ -12,14 +12,15 @@ export const fetchArticles = async (): Promise<Article[]> => {
   }
 };
 
-export const addArticle = async (article: Article): Promise<void> => {
+export const addArticle = async (article: Article): Promise<any> => {
   try {
-    await post({
+    const request = await post({
       route: "/articles/add",
       body: {
         ...article,
       },
     });
+    return request;
   } catch (error) {
     handleApiError(error, "Error while adding article:");
   }

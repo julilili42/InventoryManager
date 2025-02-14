@@ -12,14 +12,15 @@ export const fetchOrders = async (): Promise<Order[]> => {
   }
 };
 
-export const addOrder = async (order: Order): Promise<void> => {
+export const addOrder = async (order: Order): Promise<any> => {
   try {
-    await post({
+    const request = await post({
       route: "/orders/add",
       body: {
         ...order,
       },
     });
+    return request;
   } catch (error) {
     handleApiError(error, "Error while adding order:");
   }

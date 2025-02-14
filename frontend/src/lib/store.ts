@@ -4,6 +4,7 @@ import { Article, ArticleSelection, Customer, Order } from "./interfaces";
 import { fetchArticles } from "./services/articleService";
 import { fetchCustomers } from "./services/customerServices";
 import { fetchOrders } from "./services/orderServices";
+import { AxiosError } from "axios";
 
 export enum StateKeys {
   ArticleData = "articleData",
@@ -11,14 +12,21 @@ export enum StateKeys {
   OrderData = "orderData",
 }
 
+export interface NotificationState {
+  success: string | null;
+  error: AxiosError | null;
+}
+
 export interface GlobalState {
   // global states
+  notification: NotificationState;
   selectedArticle: ArticleSelection | null;
   articleData: Article[] | null;
   customerData: Customer[] | null;
   orderData: Order[] | null;
 
   // global state setters
+  setNotification: (error: NotificationState) => void;
   setSelectedArticle: (articleSelection: ArticleSelection | null) => void;
 
   setState: <T>(key: StateKeys, data: T) => void;
@@ -40,12 +48,22 @@ export const useStore = create<GlobalState>((set) => {
 
   return {
     // global states
+    notification: { success: null, error: null },
     selectedArticle: null,
     articleData: null,
     customerData: null,
     orderData: null,
 
     // global state setters
+    setNotification: (notification: NotificationState) => {
+      set({
+        notification: {
+          success: notification.success,
+          error: notification.error,
+        },
+      });
+    },
+
     setSelectedArticle: (articleSelection: ArticleSelection | null) =>
       set({ selectedArticle: articleSelection }),
 

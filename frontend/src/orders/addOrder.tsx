@@ -10,6 +10,7 @@ import { StateKeys, useStore } from "@/lib/store";
 import { searchCustomer } from "@/lib/services/customerServices";
 import { addOrder } from "@/lib/services/orderServices";
 import { FormCardOrder } from "@/components/ui/formCardOrder";
+import { isAxiosError } from "axios";
 
 export const AddOrder = () => {
   const {
@@ -50,13 +51,11 @@ export const AddOrder = () => {
     },
   ];
 
+  const { setNotification } = useStore();
+
   const handleSubmitOrder = async (input: any) => {
     const customer: Customer = await searchCustomer(input.customer_id);
     const orderId: number = input.order_id;
-
-    /* const fetched_article: Article = await searchArticle(input.article_id);
-    const quantity: number = input.quantity;
-    const orderItems: OrderItem[] = [{ article: fetched_article, quantity }]; */
 
     const orderItems: OrderItem[] | null =
       selectedArticle?.selectedArticles.flatMap((item) =>
@@ -85,27 +84,35 @@ export const AddOrder = () => {
       };
 
       try {
-        await addOrder(newData);
+        const request = await addOrder(newData);
         await fetchOrders();
         setState(StateKeys.OrderData, [newData, ...(orderData ?? [])]);
         setSelectedArticle(null);
-
+        setNotification({ success: request.message, error: null });
         console.log("Order added successfully");
+        setTimeout(() => setNotification({ success: null, error: null }), 5000);
       } catch (error) {
-        console.error("Error adding Order:", error);
+        if (isAxiosError(error)) {
+          setNotification({ success: null, error });
+          console.error("Error adding order:", error);
+          setTimeout(
+            () => setNotification({ success: null, error: null }),
+            5000
+          );
+        } else {
+          console.error("Error adding order (no axios error):", error);
+        }
       }
     }
   };
 
   return (
-    <div>
-      <FormCardOrder<Order>
-        title="Add new Order"
-        fields={fields}
-        onSubmit={handleSubmitOrder}
-        onFileImport={() => {}}
-        submitLabel="Add Order"
-      />
-    </div>
+    <FormCardOrder<Order>
+      title="Add new Order"
+      fields={fields}
+      onSubmit={handleSubmitOrder}
+      onFileImport={() => {}}
+      submitLabel="Add Order"
+    />
   );
 };

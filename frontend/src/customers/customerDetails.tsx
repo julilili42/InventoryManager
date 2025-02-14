@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { HandCoins, ShoppingCart, Hash } from "lucide-react";
 import { getCustomerStatistics } from "@/lib/services/statisticService";
 import { searchCustomer } from "@/lib/services/customerServices";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const CustomerDetails = ({
   customerId,
@@ -48,15 +49,25 @@ export const CustomerDetails = ({
   }, [customerId]);
 
   return (
-    <div className="flex flex-col items-start justify-center w-full mt-8">
-      <Card className="flex flex-col w-full mt-8">
+    <div className="flex flex-col">
+      <Card className="items-start justify-center w-full mt-10">
+        {customerId && (
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">
+              Customer Statistics
+            </CardTitle>
+          </CardHeader>
+        )}
         {customerId ? (
-          <>
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">
-                Customer Statistics
-              </CardTitle>
-              <CardDescription className="p-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={customerId}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CardDescription className="pb-7">
                 <div className="flex justify-center gap-4">
                   <div className="text-l">
                     <span className="font-bold">Customer ID: </span>#
@@ -73,66 +84,85 @@ export const CustomerDetails = ({
                   </div>
                 </div>
               </CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-8">
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-4 p-6">
-                  <Hash />
-                  <div>
-                    <CardTitle>Number of Orders</CardTitle>
-                    <CardDescription className="text-xl">
-                      {
-                        extractCustomerStatistics(
-                          fetchedCustomerStatistics,
-                          Number(customerId)
-                        ).number_of_orders
-                      }
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-4 p-6">
-                  <HandCoins />
-                  <div>
-                    <CardTitle>Total Revenue</CardTitle>
-                    <CardDescription className="text-xl">
-                      {typeof extractCustomerStatistics(
-                        fetchedCustomerStatistics,
-                        Number(customerId)
-                      ).total_revenue === "number"
-                        ? `${
+              <CardContent className="grid grid-cols-3 gap-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  <Card>
+                    <CardHeader className="flex flex-row items-center gap-4 p-6">
+                      <Hash />
+                      <div>
+                        <CardTitle>Number of Orders</CardTitle>
+                        <CardDescription className="text-xl">
+                          {
                             extractCustomerStatistics(
                               fetchedCustomerStatistics,
                               Number(customerId)
-                            ).total_revenue
-                          } €`
-                        : extractCustomerStatistics(
+                            ).number_of_orders
+                          }
+                        </CardDescription>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
+                  <Card>
+                    <CardHeader className="flex flex-row items-center gap-4 p-6">
+                      <HandCoins />
+                      <div>
+                        <CardTitle>Total Revenue</CardTitle>
+                        <CardDescription className="text-xl">
+                          {typeof extractCustomerStatistics(
                             fetchedCustomerStatistics,
                             Number(customerId)
-                          ).total_revenue}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-4 p-6">
-                  <ShoppingCart />
-                  <div>
-                    <CardTitle>Most bought item</CardTitle>
-                    <CardDescription className="text-xl">
-                      {
-                        extractCustomerStatistics(
-                          fetchedCustomerStatistics,
-                          Number(customerId)
-                        ).most_bought_item
-                      }
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-            </CardContent>
-          </>
+                          ).total_revenue === "number"
+                            ? `${
+                                extractCustomerStatistics(
+                                  fetchedCustomerStatistics,
+                                  Number(customerId)
+                                ).total_revenue
+                              } €`
+                            : extractCustomerStatistics(
+                                fetchedCustomerStatistics,
+                                Number(customerId)
+                              ).total_revenue}
+                        </CardDescription>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                >
+                  <Card>
+                    <CardHeader className="flex flex-row items-center gap-4 p-6">
+                      <ShoppingCart />
+                      <div>
+                        <CardTitle>Most bought item</CardTitle>
+                        <CardDescription className="text-xl">
+                          {
+                            extractCustomerStatistics(
+                              fetchedCustomerStatistics,
+                              Number(customerId)
+                            ).most_bought_item
+                          }
+                        </CardDescription>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              </CardContent>
+            </motion.div>
+          </AnimatePresence>
         ) : (
           <CardHeader>
             <CardTitle className="text-xl text-center">

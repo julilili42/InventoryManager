@@ -37,6 +37,7 @@ export function TableArticle({
           showFilter={true}
           showPagination={true}
           showSelect={true}
+          showError={true}
           onRowClick={onRowClick}
         />
       ) : (

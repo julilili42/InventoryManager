@@ -3,9 +3,11 @@ import { Customer } from "@/lib/interfaces";
 import { FormCard } from "@/components/ui/formCard";
 import { StateKeys, useStore } from "@/lib/store";
 import { addCustomer } from "@/lib/services/customerServices";
+import { isAxiosError } from "axios";
 
 export const AddCustomer = () => {
-  const { customerData, setState, fetchCustomers } = useStore();
+  const { customerData, setState, fetchCustomers, setNotification } =
+    useStore();
 
   const fields = [
     {
@@ -56,13 +58,20 @@ export const AddCustomer = () => {
 
   const handleSubmitCustomer = async (newData: Customer) => {
     try {
-      console.log(newData);
-      await addCustomer(newData);
+      const request = await addCustomer(newData);
       await fetchCustomers();
       setState(StateKeys.CustomerData, [newData, ...(customerData ?? [])]);
+      setNotification({ success: request.message, error: null });
       console.log("Customer added successfully");
+      setTimeout(() => setNotification({ success: null, error: null }), 5000);
     } catch (error) {
-      console.error("Error adding customer:", error);
+      if (isAxiosError(error)) {
+        setNotification({ success: null, error });
+        console.error("Error adding customer:", error);
+        setTimeout(() => setNotification({ success: null, error: null }), 5000);
+      } else {
+        console.error("Error adding customer (no axios error):", error);
+      }
     }
   };
 

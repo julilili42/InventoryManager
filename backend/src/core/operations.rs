@@ -65,7 +65,7 @@ pub fn insert_record<T: Mappable + Insertable>(conn: &Connection, item: &T) -> R
         return Err(Error::ToSqlConversionFailure(Box::new(
             std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
-                format!("Item id {} is already beeing used.", item.id_value()).to_string(),
+                format!("Item ID {} is already beeing used.", item.id_value()).to_string(),
             ),
         )));
     }

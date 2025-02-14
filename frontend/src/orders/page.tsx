@@ -33,6 +33,7 @@ export function TableOrder() {
           showFilter={true}
           showPagination={true}
           showSelect={true}
+          showError={true}
         />
       ) : (
         <div>Keine Daten verfügbar</div>

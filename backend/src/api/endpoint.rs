@@ -66,7 +66,7 @@ pub async fn handle_create_record<T: Mappable + Insertable + Debug>(
     match insert_record::<T>(&conn, &item) {
         Ok(_) => Ok((
             StatusCode::OK,
-            AxumJson(json!({ "message": format!("Item added successfully: {}", item.id_value()) })),
+            AxumJson(json!({ "message": format!("Item with ID #{} added successfully", item.id_value()) })),
         )),
         Err(e) => Err((
             StatusCode::BAD_REQUEST,

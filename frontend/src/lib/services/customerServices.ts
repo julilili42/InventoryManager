@@ -12,14 +12,15 @@ export const fetchCustomers = async (): Promise<Customer[]> => {
   }
 };
 
-export const addCustomer = async (customer: Customer): Promise<void> => {
+export const addCustomer = async (customer: Customer): Promise<any> => {
   try {
-    await post({
+    const request = await post({
       route: "/customers/add",
       body: {
         ...customer,
       },
     });
+    return request;
   } catch (error) {
     handleApiError(error, "Error while adding customer:");
   }

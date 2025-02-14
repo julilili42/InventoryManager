@@ -21,19 +21,34 @@ import {
 } from "@/components/ui/table";
 
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { motion, AnimatePresence } from "framer-motion";
 import { DataTableProps } from "@/lib/interfaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { StateKeys, useStore } from "@/lib/store";
-import { Trash2, List } from "lucide-react";
+import { Trash2, List, Terminal, Check } from "lucide-react";
 import { deleteOrders } from "@/lib/services/orderServices";
+import { useNavigate } from "react-router";
 
 export function OrderTable<TData, TValue>({
   columns,
@@ -42,6 +57,7 @@ export function OrderTable<TData, TValue>({
   showSelect = false,
   showDelete = false,
   showPagination = false,
+  showError = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -50,7 +66,8 @@ export function OrderTable<TData, TValue>({
   const [selectedOrders, setSelectedOrders] = useState<number[] | null>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-  const { orderData, setState } = useStore();
+  const { orderData, setState, notification } = useStore();
+  const navigate = useNavigate();
 
   const table = useReactTable({
     data,
@@ -113,12 +130,30 @@ export function OrderTable<TData, TValue>({
         <div className="flex justify-center gap-2 pl-4 2xl:pl-0">
           {/* Deletion */}
           {showDelete && (
-            <Button
-              variant={"destructive_muted"}
-              onClick={() => deleteRow(selectedOrders ?? [])}
-            >
-              <Trash2 /> Delete
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant={"destructive_muted"}>
+                  <Trash2 /> Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the the selected orders.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteRow(selectedOrders ?? [])}
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
 
           {/* Select */}
@@ -182,6 +217,9 @@ export function OrderTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() =>
+                    navigate(`/orders/${row.getValue("order_id")}`)
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -233,6 +271,46 @@ export function OrderTable<TData, TValue>({
             {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
         </div>
+      )}
+
+      {/* Show Error */}
+      {showError && (
+        <AnimatePresence>
+          {notification.error && (
+            <motion.div
+              className="fixed z-50 flex justify-end bottom-8 right-8"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Alert className="w-full" variant={"destructive"}>
+                <Terminal className="w-4 h-4" />
+                <AlertTitle>Error!</AlertTitle>
+
+                <AlertDescription>
+                  {(notification.error as any).response?.data.error}
+                </AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+          {notification.success && (
+            <motion.div
+              className="fixed z-50 flex justify-end bottom-8 right-8"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Alert className="w-full" variant={"success"}>
+                <Check className="w-4 h-4" />
+                <AlertTitle>Success!</AlertTitle>
+
+                <AlertDescription>{notification.success}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
     </div>
   );
