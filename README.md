@@ -1,6 +1,5 @@
 # Inventory Management Tool with Rust REST API and React TypeScript Frontend
 
-## Inventory Manager allows you to link articles, customers, and orders while providing a simple and efficient way to track and process inventory changes.
 Inventory Manager is a web-based application designed to simplify inventory management by linking articles, customers, and orders. It provides a clear and structured interface for tracking stock levels, 
 managing customer data, and generating PDF invoices. 
 The key features are:
