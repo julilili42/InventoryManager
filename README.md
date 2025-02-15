@@ -1,33 +1,40 @@
-### Installation
+# Inventory Management Tool with Rust REST API and React TypeScript Frontend
 
-1.  Install frontend dependencies:
+Inventory Manager is a web-based application designed to simplify inventory management by linking articles, customers, and orders. It provides a clear and structured interface for tracking stock levels, 
+managing customer data, and generating PDF invoices. 
+The key features are:
 
-    ```bash
-    cd frontend
-    npm install 
-    ```
-    
-2.  Install backend dependencies (if any, typically handled by Cargo.toml):
+* Article & Customer Management – Create, view, and delete articles and customer records.
+* Order Processing – Generate and manage orders with automated PDF invoice generation (via [headless chromium](https://github.com/rust-headless-chrome/rust-headless-chrome)).
+* Modern Tech Stack – Built with Rust (REST API), SQLite (Database), React & TypeScript (Frontend).
 
-    ```bash
-    cd backend
-    cargo build
-    ```
+## Technologies Used
+- Frontend: React, TypeScript, shadcn Library
+- Backend: Rust, Axum (REST API)
+- Database: SQLite
 
-### Running the Application
+## Preview
+### Article and Customers
+![output](https://github.com/user-attachments/assets/71478ac1-54ac-4c2a-bbb3-d66764ae643e)
 
-1.  Start the backend server:
+### Orders
+![order-ezgif com-speed](https://github.com/user-attachments/assets/2ff2b8a1-cc0b-438c-b78c-749f0d97f9db)
 
-    ```bash
-    cd backend
-    cargo run
-    ```
 
-2.  Start the frontend development server:
+## Installation and Running the Application
 
-    ```bash
-    cd frontend
-    npm run dev 
-    ```
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev 
+```
+
+### Backend
+```bash
+cd backend
+cargo build
+cargo run
+```
 
 The application should now be running in your browser.
