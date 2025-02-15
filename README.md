@@ -21,36 +21,20 @@ The key features are:
 ![order-ezgif com-speed](https://github.com/user-attachments/assets/2ff2b8a1-cc0b-438c-b78c-749f0d97f9db)
 
 
-## Installation
+## Installation and Running the Application
 
-1.  Install frontend dependencies:
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev 
+```
 
-    ```bash
-    cd frontend
-    npm install 
-    ```
-    
-2.  Install backend dependencies (if any, typically handled by Cargo.toml):
-
-    ```bash
-    cd backend
-    cargo build
-    ```
-
-### Running the Application
-
-1.  Start the backend server:
-
-    ```bash
-    cd backend
-    cargo run
-    ```
-
-2.  Start the frontend development server:
-
-    ```bash
-    cd frontend
-    npm run dev 
-    ```
+### Backend
+```bash
+cd backend
+cargo build
+cargo run
+```
 
 The application should now be running in your browser.
