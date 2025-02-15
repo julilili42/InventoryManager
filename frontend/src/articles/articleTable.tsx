@@ -133,7 +133,7 @@ export function ArticleTable<TData extends { quantity?: number }, TValue>({
           {/* Filter */}
           {showFilter && (
             <Input
-              placeholder="Filter Article Id.."
+              placeholder="Filter Article ID"
               value={
                 (table.getColumn("article_id")?.getFilterValue() as string) ??
                 ""

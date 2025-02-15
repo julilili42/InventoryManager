@@ -115,7 +115,7 @@ export function OrderTable<TData, TValue>({
         {/* Filter */}
         {showFilter && (
           <Input
-            placeholder="Filter order id.."
+            placeholder="Filter Order ID"
             value={
               (table.getColumn("order_id")?.getFilterValue() as string) ?? ""
             }

@@ -53,13 +53,11 @@ export const OrderDetails = ({ order_id }: { order_id: number | null }) => {
                     <CardTitle className="text-xl">Order Items</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {fetchedOrder ? (
+                    {fetchedOrder && (
                       <OrderTable
                         columns={columns}
                         data={fetchedOrder.items ? fetchedOrder.items : []}
                       />
-                    ) : (
-                      <p>Loading order details or no order found.</p>
                     )}
                   </CardContent>
                 </Card>

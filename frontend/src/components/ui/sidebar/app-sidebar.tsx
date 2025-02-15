@@ -1,6 +1,5 @@
 // app-sidebar.tsx
 import { PackageSearch, UserSearch, FolderSearch } from "lucide-react";
-import { motion } from "framer-motion";
 
 import {
   Sidebar,
@@ -12,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar/sidebar";
+import { useEffect, useState } from "react";
 
 // Menu items.
 const items = [
@@ -33,37 +33,49 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const [pathname, setPathname] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handleLocationChange = () => setPathname(window.location.pathname);
+
+    window.addEventListener("popstate", handleLocationChange);
+    return () => window.removeEventListener("popstate", handleLocationChange);
+  }, []);
+
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.1 }}
-          >
+          <div>
             <SidebarGroupLabel className="text-lg font-semibold">
               Inventory Manager
             </SidebarGroupLabel>
-          </motion.div>
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item, index) => (
-                <SidebarMenuItem key={item.title}>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.1, delay: 0.05 * index }}
-                  >
-                    <SidebarMenuButton asChild>
-                      <a href={item.url} className="text-lg font-medium">
-                        <item.icon className="size-6" />
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </motion.div>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isActive = pathname === item.url;
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <div>
+                      <SidebarMenuButton asChild isActive={isActive}>
+                        <a
+                          href={item.url}
+                          className={`text-lg font-medium flex items-center gap-2 p-2 rounded-md ${
+                            isActive
+                              ? "bg-gray-100 text-white"
+                              : "hover:bg-gray-100"
+                          }`}
+                        >
+                          <item.icon className="size-6" />
+                          <span>{item.title}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </div>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

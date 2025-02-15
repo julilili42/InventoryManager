@@ -21,21 +21,15 @@ export const OrderSelection = () => {
   const { articleData, fetchArticles, setSelectedArticle } = useStore();
 
   // local
-  const [loading, setLoading] = useState<boolean>(true);
   const [pendingSelection, setPendingSelection] =
     useState<ArticleSelection | null>(null);
 
   useEffect(() => {
     const fetchDataAsync = async () => {
       await fetchArticles();
-      setLoading(false);
     };
     fetchDataAsync();
   }, [articleData]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   const getSelectedArticles = (article_selection: ArticleSelection) => {
     setPendingSelection(article_selection);

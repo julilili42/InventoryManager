@@ -54,7 +54,7 @@ export const CustomerDetails = ({
         {customerId && (
           <CardHeader>
             <CardTitle className="text-2xl text-center">
-              Customer Statistics
+              Customer Details
             </CardTitle>
           </CardHeader>
         )}
@@ -166,7 +166,7 @@ export const CustomerDetails = ({
         ) : (
           <CardHeader>
             <CardTitle className="text-xl text-center">
-              Click on Customer to view Statistics
+              Click on Customer to view Details
             </CardTitle>
           </CardHeader>
         )}

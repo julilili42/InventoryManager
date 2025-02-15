@@ -48,7 +48,7 @@ export const ArticleDetails = ({ articleId }: { articleId: number | null }) => {
         {articleId && (
           <CardHeader>
             <CardTitle className="text-2xl text-center">
-              Article Statistics
+              Article Details
             </CardTitle>
           </CardHeader>
         )}
@@ -142,7 +142,7 @@ export const ArticleDetails = ({ articleId }: { articleId: number | null }) => {
           <div>
             <CardHeader>
               <CardTitle className="text-xl text-center">
-                Click on Article to view Statistics
+                Click on Article to view Details
               </CardTitle>
             </CardHeader>
           </div>
