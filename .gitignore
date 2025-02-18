@@ -1,8 +1,10 @@
-# Globale Ignorierregeln
 
 # Logs
 *.log
 *.tmp
+
+#Sqlite DB
+data/
 
 # Node.js (frontend)
 frontend/node_modules/
@@ -10,7 +12,6 @@ frontend/node_modules/
 # Rust (backend)
 backend/target/
 
-# Sonstiges
 .DS_Store
 *.env
 

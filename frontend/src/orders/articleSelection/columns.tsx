@@ -6,7 +6,7 @@ import { Article } from "@/lib/interfaces";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export const columns: ColumnDef<Article>[] = [
   {

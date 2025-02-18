@@ -6,16 +6,38 @@ use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::env;
+use std::fs;
+use std::path::PathBuf;
 use tower_http::cors::{Any, CorsLayer};
 
+
+fn get_project_root() -> PathBuf {
+    let current_dir = env::current_dir().expect("Failed to get current directory");
+    current_dir.parent().unwrap().to_path_buf() 
+}
+
+
+
 pub async fn start_api_server() {
+    // DB Path
+    let project_root = get_project_root();
+    let db_path = project_root.join("data/database.db");
+    let db_dir = db_path.parent().unwrap(); 
+
+    if !db_dir.exists() {
+        fs::create_dir_all(db_dir).expect("Failed to create data directory");
+    }
+
+
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods(Any)
         .allow_headers(Any);
 
-    // SQLite Verbindungspool erstellen
-    let manager = SqliteConnectionManager::file("database.db");
+    
+    // SQLite Connection Pool
+    let manager = SqliteConnectionManager::file(db_path);
     let pool = Arc::new(Pool::builder().max_size(5).build(manager).unwrap());
 
     let conn = pool.get().expect("Failed to get connection from pool");
@@ -24,17 +46,14 @@ pub async fn start_api_server() {
         eprintln!("Failed to create table: {}", e);
     }
 
-    // Router konfigurieren und Pool als Extension weitergeben
     let app = Router::new()
         .merge(routes::get_routes())
-        .layer(Extension(pool)) // Verbindungspool weitergeben
-        .layer(cors); // CORS Layer hinzufügen
+        .layer(Extension(pool)) 
+        .layer(cors); 
 
-    // Server Adresse konfigurieren
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     println!("Server läuft auf {}", addr);
 
-    // Server starten
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
