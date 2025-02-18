@@ -11,7 +11,7 @@ use std::{fmt::Debug, io::Cursor};
 use crate::core::{
     statistics::stats::get_statistics,
     traits::Searchable,
-    types::{Article, DbPool, Order, Statistics},
+    types::{DbPool, Order, Statistics},
 };
 
 use crate::core::{
@@ -21,6 +21,7 @@ use crate::core::{
     traits::{Insertable, Mappable},
 };
 use serde_json::json;
+use serde::de::DeserializeOwned;
 
 use crate::core::pdf::generation::fetch_pdf;
 
@@ -143,11 +144,15 @@ pub async fn handle_generate_pdf(
     Ok(pdf_response)
 }
 
-pub async fn handle_import_csv(
+// POST /<T>/handle_import_csv
+pub async fn handle_import_csv<T>(
     Extension(pool): Extension<DbPool>,
     mut multipart: Multipart,
-) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
-    let conn = establish_connection(&pool)?;
+) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)>
+where
+    T: Mappable + Insertable + Debug + DeserializeOwned,
+{
+    let conn = crate::core::operations::establish_connection(&pool)?;
 
     let mut file_data = None;
     while let Some(field) = multipart.next_field().await.unwrap_or(None) {
@@ -157,22 +162,15 @@ pub async fn handle_import_csv(
         }
     }
 
-    let data = match file_data {
-        Some(data) => data,
-        None => {
-            return Err((
-                StatusCode::BAD_REQUEST,
-                Json(json!({ "error": "Keine Datei hochgeladen" })),
-            ))
-        }
-    };
+    let data = file_data.ok_or((
+        StatusCode::BAD_REQUEST,
+        Json(json!({ "error": "Keine Datei hochgeladen" })),
+    ))?;
 
-    let mut rdr = ReaderBuilder::new()
-        .has_headers(true)
-        .from_reader(Cursor::new(data));
+    let mut rdr = ReaderBuilder::new().has_headers(true).from_reader(Cursor::new(data));
 
     for result in rdr.deserialize() {
-        let record: Article = result.map_err(|e| {
+        let record: T = result.map_err(|e| {
             (
                 StatusCode::BAD_REQUEST,
                 Json(json!({ "error": format!("CSV-Parsing-Fehler: {}", e) })),
@@ -192,3 +190,4 @@ pub async fn handle_import_csv(
         Json(json!({ "message": "CSV erfolgreich importiert" })),
     ))
 }
+

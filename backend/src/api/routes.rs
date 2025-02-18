@@ -28,7 +28,7 @@ pub fn article_routes() -> Router {
             delete(handle_delete_record::<Article>),
         )
         .route("/articles/update", put(handle_update_record::<Article>))
-        .route("/articles/import_csv", post(handle_import_csv))
+        .route("/articles/import_csv", post(handle_import_csv::<Article>))
         .route("/articles/search/:id", get(handle_search::<Article>))
 }
 
@@ -45,6 +45,7 @@ pub fn customer_routes() -> Router {
             delete(handle_delete_record::<Customer>),
         )
         .route("/customers/update", put(handle_update_record::<Customer>))
+        .route("/customers/import_csv", post(handle_import_csv::<Customer>))
         .route("/customers/search/:id", get(handle_search::<Customer>))
 }
 

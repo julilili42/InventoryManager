@@ -6,5 +6,4 @@ export const handleApiError = (error: any, message: string) => {
   } else {
     console.error(message, error);
   }
-  throw error;
 };

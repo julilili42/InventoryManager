@@ -4,6 +4,7 @@ import { FormCard } from "@/components/ui/formCard";
 import { StateKeys, useStore } from "@/lib/store";
 import { addCustomer } from "@/lib/services/customerServices";
 import { isAxiosError } from "axios";
+import { importCustomerCSV } from "@/lib/services/importExportService";
 
 export const AddCustomer = () => {
   const { customerData, setState, fetchCustomers, setNotification } =
@@ -75,12 +76,19 @@ export const AddCustomer = () => {
     }
   };
 
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      await importCustomerCSV(e.target.files[0]);
+      await fetchCustomers();
+    }
+  };
+
   return (
     <FormCard<Customer>
       title="Add new Customer"
       fields={fields}
       onSubmit={handleSubmitCustomer}
-      onFileImport={() => {}}
+      onFileImport={handleFileImport}
       submitLabel="Add Customer"
     />
   );

@@ -3,16 +3,25 @@ import { post } from "@/lib/api";
 import { Order } from "@/lib/interfaces";
 import { handleApiError } from "../error";
 
-export const importCSV = async (file: File): Promise<void> => {
+const importCSV = async (file: File, route: string): Promise<void> => {
   const formData = new FormData();
   formData.append("file", file);
 
   try {
-    await post({ route: "/articles/import_csv", body: formData });
+    await post({ route, body: formData });
   } catch (error) {
     handleApiError(error, "Error while importing csv file:");
   }
 };
+
+export const importArticleCSV = (file: File): Promise<void> =>
+  importCSV(file, "/articles/import_csv");
+
+export const importCustomerCSV = (file: File): Promise<void> =>
+  importCSV(file, "/customers/import_csv");
+
+export const importOrderCSV = (file: File): Promise<void> =>
+  importCSV(file, "/orders/import_csv");
 
 export const pdf_gen = async (order: Order): Promise<void> => {
   try {

@@ -1,7 +1,7 @@
 // addArticle.tsx
 import { Article } from "@/lib/interfaces";
 import { addArticle } from "@/lib/services/articleService";
-import { importCSV } from "@/lib/services/importExportService";
+import { importArticleCSV } from "@/lib/services/importExportService";
 import { isAxiosError } from "axios";
 import { StateKeys, useStore } from "@/lib/store";
 import { FormCard } from "@/components/ui/formCard";
@@ -71,7 +71,7 @@ export const AddArticle = () => {
 
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
-      await importCSV(e.target.files[0]);
+      await importArticleCSV(e.target.files[0]);
       await fetchArticles();
     }
   };
