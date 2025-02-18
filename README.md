@@ -4,7 +4,7 @@ Inventory Manager is a web-based application designed to simplify inventory mana
 managing customer data, and generating PDF invoices. 
 The key features are:
 
-* Article & Customer Management – Create, view, import and delete articles and customer records.
+* Article & Customer Management – Create, view, delete and import articles and customer records.
 * Order Processing – Generate and manage orders with automated PDF invoice generation (via [headless chromium](https://github.com/rust-headless-chrome/rust-headless-chrome)).
 * Modern Tech Stack – Built with Rust (REST API), SQLite (Database), React & TypeScript (Frontend).
 
