@@ -25,6 +25,20 @@ use serde::de::DeserializeOwned;
 
 use crate::core::pdf::generation::fetch_pdf;
 
+
+
+
+#[utoipa::path(
+    get,
+    path = "/search/{id}",
+    params(
+        ("id" = i32, Path, description = "ID of searched item")
+    ),
+    responses(
+        (status = 200, description = "Item found", body = ApiResponse),
+        (status = 500, description = "Error occured while searching", body = serde_json::Value)
+    )
+)]
 // GET <T>/search/:id
 pub async fn handle_search<T: Mappable + Insertable + Searchable>(
     Extension(pool): Extension<DbPool>,
@@ -42,6 +56,14 @@ pub async fn handle_search<T: Mappable + Insertable + Searchable>(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/records",
+    responses(
+        (status = 200, description = "Returned all records", body = [ApiResponse]),
+        (status = 500, description = "Error while returning all records", body = serde_json::Value)
+    )
+)]
 // GET /<T>
 pub async fn handle_fetch_records<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
@@ -57,6 +79,16 @@ pub async fn handle_fetch_records<T: Mappable + Insertable + Debug>(
     }
 }
 
+
+#[utoipa::path(
+    post,
+    path = "/add",
+    request_body = serde_json::Value,
+    responses(
+        (status = 200, description = "Record added", body = serde_json::Value),
+        (status = 400, description = "Error while adding record", body = serde_json::Value)
+    )
+)]
 // POST /<T>/add
 pub async fn handle_create_record<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
@@ -75,6 +107,7 @@ pub async fn handle_create_record<T: Mappable + Insertable + Debug>(
         )),
     }
 }
+
 
 // DELETE /<T>/delete (optional /:id)
 pub async fn handle_delete_record<T: Mappable + Insertable + Debug>(
@@ -98,6 +131,16 @@ pub async fn handle_delete_record<T: Mappable + Insertable + Debug>(
     }
 }
 
+
+#[utoipa::path(
+    put,
+    path = "/update",
+    request_body = serde_json::Value,
+    responses(
+        (status = 200, description = "Record updated", body = serde_json::Value),
+        (status = 400, description = "Error while updating", body = serde_json::Value)
+    )
+)]
 // PUT /<T>/update
 pub async fn handle_update_record<T: Mappable + Insertable + Debug>(
     Extension(pool): Extension<DbPool>,
@@ -121,6 +164,15 @@ pub async fn handle_update_record<T: Mappable + Insertable + Debug>(
     }
 }
 
+
+#[utoipa::path(
+    get,
+    path = "/operations/statistics",
+    responses(
+        (status = 200, description = "Statistics fetched", body = Statistics),
+        (status = 400, description = "Error fetching statistics", body = serde_json::Value)
+    )
+)]
 // GET /operations/statistics
 pub async fn handle_statistics(
     Extension(pool): Extension<DbPool>,
@@ -136,6 +188,16 @@ pub async fn handle_statistics(
     }
 }
 
+
+#[utoipa::path(
+    post,
+    path = "/pdf_gen",
+    request_body = Order,
+    responses(
+        (status = 200, description = "PDF generated"),
+        (status = 400, description = "Error generating PDF", body = serde_json::Value)
+    )
+)]
 // POST /pdf_gen
 pub async fn handle_generate_pdf(
     Json(order): Json<Order>,
@@ -144,6 +206,17 @@ pub async fn handle_generate_pdf(
     Ok(pdf_response)
 }
 
+
+
+#[utoipa::path(
+    post,
+    path = "/import_csv",
+    responses(
+        (status = 200, description = "CSV imported successfully", body = serde_json::Value),
+        (status = 400, description = "Error during import", body = serde_json::Value),
+        (status = 500, description = "Internal server error", body = serde_json::Value)
+    )
+)]
 // POST /<T>/handle_import_csv
 pub async fn handle_import_csv<T>(
     Extension(pool): Extension<DbPool>,
@@ -187,7 +260,7 @@ where
 
     Ok((
         StatusCode::OK,
-        Json(json!({ "message": "CSV erfolgreich importiert" })),
+        Json(json!({ "message": "CSV successfully imported" })),
     ))
 }
 

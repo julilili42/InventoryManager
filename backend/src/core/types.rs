@@ -5,11 +5,12 @@ use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::types::{Null, ToSqlOutput};
 use rusqlite::{params, Connection, Error, Result, Row};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use std::collections::HashMap;
 use std::sync::Arc;
 use strum_macros::{Display, EnumString};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, ToSchema)]
 pub struct Article {
     pub article_id: i32,
     pub name: String,
@@ -114,7 +115,7 @@ impl Insertable for Article {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, ToSchema)]
 pub struct Customer {
     pub customer_id: i32,
     pub first_name: String,
@@ -222,7 +223,7 @@ impl Searchable for Customer {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, ToSchema)]
 pub struct OrderItem {
     pub article: Article,
     pub quantity: i32,
@@ -234,7 +235,7 @@ impl OrderItem {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Display, EnumString)]
+#[derive(Serialize, Deserialize, Debug, Display, EnumString, ToSchema)]
 pub enum OrderType {
     Return,
     Sale,
@@ -250,7 +251,7 @@ impl OrderType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Display, EnumString)]
+#[derive(Serialize, Deserialize, Debug, Display, EnumString, ToSchema)]
 pub enum OrderStatus {
     Pending,
     Completed,
@@ -270,7 +271,7 @@ impl OrderStatus {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, ToSchema)]
 pub struct Order {
     pub order_id: i32,
     pub customer: Customer,
@@ -399,7 +400,7 @@ impl Searchable for Order {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct ArticleStatistics {
     pub ordered_quantities: HashMap<i32, i32>,
     pub article_revenue: HashMap<i32, f64>,
@@ -414,7 +415,7 @@ impl ArticleStatistics {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct OrderStatistics {
     pub total_prices: HashMap<i32, f64>,
 }
@@ -425,7 +426,7 @@ impl OrderStatistics {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct CustomerStatistics {
     pub number_of_orders: HashMap<i32, i32>,
     pub total_revenue: HashMap<i32, f64>,
@@ -446,7 +447,7 @@ impl CustomerStatistics {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct Statistics {
     pub article_statistics: ArticleStatistics,
     pub order_statistics: OrderStatistics,
@@ -466,5 +467,17 @@ impl Statistics {
         }
     }
 }
+
+
+
+#[derive(Serialize, Deserialize, Debug, ToSchema)]
+#[serde(tag = "type", content = "data")]
+pub enum ApiResponse {
+    Article(Article),
+    Customer(Customer),
+    Order(Order),
+}
+
+
 
 pub type DbPool = Arc<r2d2::Pool<SqliteConnectionManager>>;

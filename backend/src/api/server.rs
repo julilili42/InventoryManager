@@ -4,13 +4,11 @@ use crate::core::operations::initialize_tables;
 use axum::{Extension, Router};
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
-use std::net::SocketAddr;
 use std::sync::Arc;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use tower_http::cors::{Any, CorsLayer};
-
 
 fn get_project_root() -> PathBuf {
     let current_dir = env::current_dir().expect("Failed to get current directory");
@@ -30,11 +28,6 @@ pub async fn start_api_server() {
     }
 
 
-    let cors = CorsLayer::new()
-        .allow_origin(Any)
-        .allow_methods(Any)
-        .allow_headers(Any);
-
     
     // SQLite Connection Pool
     let manager = SqliteConnectionManager::file(db_path);
@@ -46,16 +39,21 @@ pub async fn start_api_server() {
         eprintln!("Failed to create table: {}", e);
     }
 
+
+    let cors = CorsLayer::new()
+    .allow_origin(Any)  
+    .allow_methods(Any)  
+    .allow_headers(Any); 
+
+    
     let app = Router::new()
         .merge(routes::get_routes())
-        .layer(Extension(pool)) 
-        .layer(cors); 
+        .layer(cors.clone())
+        .layer(Extension(pool));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    println!("Server läuft auf {}", addr);
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
+        .await.unwrap_or_else(|_| panic!("Unable to listen on 127.0.0.1:8080"));
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(listener, app).await.unwrap();
+    
 }

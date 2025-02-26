@@ -1,16 +1,38 @@
 //routes.rs
 use crate::api::endpoint::{
-    handle_create_record, handle_delete_record, handle_fetch_records, handle_generate_pdf,
-    handle_import_csv, handle_search, handle_update_record,
+    handle_create_record, handle_fetch_records, handle_generate_pdf,
+    handle_import_csv, handle_search, handle_update_record, handle_delete_record
 };
+use crate::api;
 
-use crate::core::types::{Article, Customer, Order};
+use crate::core::types::{ApiResponse, Article, ArticleStatistics, Customer, CustomerStatistics, Order, OrderItem, OrderStatistics, OrderStatus, OrderType, Statistics};
 use axum::{
     routing::{delete, get, post, put},
     Router,
 };
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use super::endpoint::handle_statistics;
+
+
+#[derive(OpenApi)]
+#[openapi(
+    tags(
+        (name = "InventoryManager", description = "Documentation of the REST-API of InventoryManager.")
+    ),
+    components(schemas(Statistics, ApiResponse, Article, Customer, Order, OrderItem, OrderType, OrderStatus, CustomerStatistics, ArticleStatistics, OrderStatistics)),
+    paths(
+        api::endpoint::handle_search,
+        api::endpoint::handle_fetch_records,
+        api::endpoint::handle_create_record,
+        api::endpoint::handle_update_record,
+        api::endpoint::handle_statistics,
+        api::endpoint::handle_generate_pdf,
+        api::endpoint::handle_import_csv
+    )
+)]
+pub struct ApiDoc;
 
 pub fn operation_routes() -> Router {
     Router::new()
@@ -65,4 +87,5 @@ pub fn get_routes() -> Router {
         .nest("/api", article_routes())
         .nest("/api", customer_routes())
         .nest("/api", order_routes())
+        .merge(SwaggerUi::new("/api/docs").url("/api-docs/openapi.json", ApiDoc::openapi()))
 }
