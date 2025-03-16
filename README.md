@@ -2,7 +2,8 @@
 
 Inventory Manager is a web-based application designed to simplify inventory management by linking articles, customers, and orders. It provides a clear and structured interface for tracking stock levels, 
 managing customer data, and generating PDF invoices. 
-The key features are:
+
+Key features are:
 
 * Article & Customer Management – Create, view, delete and import articles and customer records.
 * Order Processing – Generate and manage orders with automated PDF invoice generation (via [headless chromium](https://github.com/rust-headless-chrome/rust-headless-chrome)).
